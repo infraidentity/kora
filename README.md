@@ -84,11 +84,11 @@ records the merchant's consent without counting toward the plan.
    - Deletion callback URL: `<public url>/webhooks/deletion`
    - Put its client id and secret in `CLIENT_ID` / `CLIENT_SECRET`.
 3. On the portal's **Billing** page, turn on **Pay-As-You-Verify** for the
-   same app (the merchant badge uses it). Until INFRA opens live PayV
-   payments, put the app's *test* credentials in `PAYV_CLIENT_ID` /
-   `PAYV_CLIENT_SECRET`; afterwards leave them empty and PayV uses
-   `CLIENT_ID` / `CLIENT_SECRET`. Optional: turn on strict payer mode
-   (`payer_must_be_user`) to test wallet linking.
+   same app (the merchant badge uses it). Leave `PAYV_CLIENT_ID` /
+   `PAYV_CLIENT_SECRET` empty to use `CLIENT_ID` / `CLIENT_SECRET`. Until
+   INFRA opens live PayV payments, every payment settles on Base Sepolia
+   with test USDC, whichever keys you use. Optional: turn on strict payer
+   mode (`payer_must_be_user`) to test wallet linking.
 4. Pick a `WEBHOOK_SECRET`, set `KORA_PUBLIC_URL`, and run
    `node scripts/register-webhooks.js <developer token>`. INFRA won't send
    webhooks to localhost; use the Railway deployment or a tunnel.
@@ -117,9 +117,10 @@ records the merchant's consent without counting toward the plan.
 
   Each prints every step (signed by INFRA, issued to this app, not expired,
   live or test, every fact signed) and ends with VALID or NOT VALID.
-- **Merchant badge**: needs a PayV-enabled INFRA, a verified **sandbox user**
-  (test credentials only accept sandbox users), a wallet on Base Sepolia with
-  test USDC (faucet.circle.com), and a Connect code from that sandbox user.
+- **Merchant badge**: needs a verified INFRA account (a sandbox user if Kora
+  runs on test keys), a wallet such as MetaMask with test USDC on Base Sepolia
+  (free from faucet.circle.com), and a Connect code from that account. Until
+  INFRA opens live payments, the fee is paid in test USDC: no real money.
   Kora quotes the fee (402), your wallet signs an EIP-3009 authorization
   (`client/public/payv.js`, no gas), and Kora retries with `X-PAYMENT`.
 - **Deletion**: remove Kora in INFRA Accounts → Connected apps. The

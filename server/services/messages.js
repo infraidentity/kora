@@ -19,7 +19,7 @@ const MESSAGES = {
   // PayV
   PAYV_DISABLED: "INFRA hasn't turned PayV on yet.",
   PAYV_NOT_ENABLED_FOR_APP: 'The merchant app must be set to PayV billing in the INFRA developer portal.',
-  PAYV_LIVE_DISABLED: 'Live PayV payments are not open yet. Use the merchant app\'s test credentials with a sandbox user.',
+  PAYV_LIVE_DISABLED: 'Pay-As-You-Verify payments are switched off on INFRA right now. Try again later.',
   CONSENT_REQUIRED: 'You need to share your INFRA verification with Kora first. Paste a fresh INFRA Connect code.',
   VERIFICATION_POLICY_NOT_SATISFIED: "Your INFRA verification doesn't meet Kora's merchant requirements yet.",
   VERIFICATION_REQUIRED: 'Finish verifying your identity in INFRA Accounts first. Verifying is free.',

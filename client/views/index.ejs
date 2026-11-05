@@ -7,7 +7,7 @@
 <section class="hero">
   <div>
     <span class="pill brand">Peer-to-peer USDC ↔ Naira</span>
-    <h1 style="margin-top:14px">Trade with people<br>you can actually trust.</h1>
+    <h1 style="margin-top:18px">Trade with people<br>you can <em>actually trust.</em></h1>
     <p class="lead">Everyone who trades on Kora has verified their identity with INFRA. You see who they are before money moves, and Kora never holds a copy of anyone's ID.</p>
     <div class="row" style="margin-top:28px">
       <% if (configured) { %>
@@ -16,37 +16,62 @@
         <span class="notice warn" style="margin:0">Set CLIENT_ID and CLIENT_SECRET to turn on sign-in. See README.md.</span>
       <% } %>
     </div>
-    <p class="subtle" style="margin-top:12px">New to INFRA? You can create an account and verify on the next screen. It is free.</p>
+    <p class="subtle" style="margin-top:14px">New to INFRA? You can create an account and verify on the next screen. It is free.</p>
   </div>
-  <div class="card stack">
-    <h2>How Kora uses INFRA</h2>
-    <p class="muted">You choose what to share when you continue with INFRA. Kora asks for:</p>
-    <dl class="facts">
-      <dt>Name and country</dt><dd>So other traders know who you are</dd>
-      <dt>Verification status</dt><dd>Sets your trading limit</dd>
-      <dt>Confirmed facts</dt><dd>Over 18, address verified</dd>
-      <dt>Document types</dt><dd>Which IDs you verified, never the documents</dd>
-    </dl>
-    <p class="subtle">Withdraw access any time in INFRA Accounts. Kora deletes your data as soon as you do.</p>
+  <div class="deal" aria-label="Example of a trade on Kora">
+    <div class="spread"><span class="tag">Example trade</span><span class="pill brand">#1042</span></div>
+    <div class="party">
+      <span class="avatar">AO</span>
+      <div><div class="pname">Adaeze O.</div><span class="check"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 13.5 4v4c0 3.2-2.3 5.7-5.5 6.5C4.8 13.7 2.5 11.2 2.5 8V4L8 1.5Z" fill="currentColor" opacity=".25"/><path d="m5.5 8 1.8 1.8L10.8 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Verified by INFRA</span></div>
+      <div class="amount">250 USDC<small>selling</small></div>
+    </div>
+    <div class="party">
+      <span class="avatar">TB</span>
+      <div><div class="pname">Tunde B.</div><span class="check"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 13.5 4v4c0 3.2-2.3 5.7-5.5 6.5C4.8 13.7 2.5 11.2 2.5 8V4L8 1.5Z" fill="currentColor" opacity=".25"/><path d="m5.5 8 1.8 1.8L10.8 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Verified by INFRA</span></div>
+      <div class="amount">₦401,250<small>at ₦1,605 / USDC</small></div>
+    </div>
+    <div class="proof"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.5 13.5 4v4c0 3.2-2.3 5.7-5.5 6.5C4.8 13.7 2.5 11.2 2.5 8V4L8 1.5Z" fill="currentColor" opacity=".25"/><path d="m5.5 8 1.8 1.8L10.8 6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Both names checked before money moved. Proof saved on the trade.</span></div>
   </div>
 </section>
 
-<section class="grid three" style="margin-top:8px">
+<div class="section-title">
+  <h2>What INFRA does for Kora</h2>
+  <span class="subtle">Every part of this app runs on INFRA</span>
+</div>
+
+<section class="grid three">
   <div class="card feature">
-    <div class="icon">🛡️</div>
+    <span class="num">01</span>
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M7 16V11M12 16V7M17 16V4"/></svg></div>
     <h3>Limits that follow verification</h3>
     <p class="muted">Verify with INFRA to trade up to ₦500,000. Add your address and age to trade up to ₦5,000,000.</p>
   </div>
   <div class="card feature">
-    <div class="icon">🤝</div>
+    <span class="num">02</span>
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 19c.8-2.6 2.8-4 5-4s4.2 1.4 5 4M11 19c.8-2.6 2.8-4 5-4s4.2 1.4 5 4"/></svg></div>
     <h3>Verified names on every trade</h3>
     <p class="muted">Before money moves, both traders share their verified name with an INFRA Connect code. You only ever pay into an account in that name.</p>
   </div>
   <div class="card feature">
-    <div class="icon">⚡</div>
+    <span class="num">03</span>
+    <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 19 6v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6l7-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
     <h3>Merchant badge with PayV</h3>
     <p class="muted">Merchants pay a small USDC fee from their wallet to have Kora reuse their INFRA verification. No subscription.</p>
   </div>
+</section>
+
+<section class="card shares" style="margin-top:16px">
+  <div class="stack">
+    <h2>What Kora asks for</h2>
+    <p class="muted">You choose what to share when you continue with INFRA.</p>
+    <p class="subtle">Withdraw access any time in INFRA Accounts. Kora deletes your data as soon as you do.</p>
+  </div>
+  <dl class="facts">
+    <dt>Name and country</dt><dd>So other traders know who you are</dd>
+    <dt>Verification status</dt><dd>Sets your trading limit</dd>
+    <dt>Confirmed facts</dt><dd>Over 18, address verified</dd>
+    <dt>Document types</dt><dd>Which IDs you verified, never the documents</dd>
+  </dl>
 </section>
 
 <%- include('partials/foot') %>

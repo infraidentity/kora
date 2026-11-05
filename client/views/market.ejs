@@ -13,7 +13,7 @@
   <% [['sell', 'Buy USDC', 'People selling USDC', sells], ['buy', 'Sell USDC', 'People buying USDC', buys]].forEach(function (col) { %>
     <section class="card">
       <div class="spread">
-        <h2><%= col[1] %></h2>
+        <h2 class="col-head"><span class="tick <%= col[0] %>" aria-hidden="true"></span><%= col[1] %></h2>
         <span class="subtle"><%= col[2] %></span>
       </div>
       <% if (!col[3].length) { %>
@@ -22,6 +22,7 @@
         <ul class="offers" style="margin-top:6px">
           <% col[3].forEach(function (o) { %>
             <li class="offer">
+              <span class="avatar" aria-hidden="true"><%= String(o.name || '?').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() %></span>
               <div>
                 <div class="who-line">
                   <%= o.name %>
@@ -86,6 +87,7 @@
       <ul class="offers" style="margin-top:6px">
         <% trades.forEach(function (t) { %>
           <li class="offer">
+            <span class="avatar" aria-hidden="true">#</span>
             <div>
               <div class="who-line">#<%= t.id %> · <span class="side-<%= t.side %>"><%= t.side === 'buy' ? 'Buying' : 'Selling' %></span> <%= t.amount_usdc %> USDC</div>
               <div class="numbers"><%= ngn(t.total_ngn) %> · with <%= t.maker_id ? (t.maker_first_name || 'Kora trader') : t.demo_name %></div>
