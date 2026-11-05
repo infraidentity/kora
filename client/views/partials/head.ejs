@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@500;700&display=swap">
-  <link rel="stylesheet" href="/kora.css">
+  <link rel="stylesheet" href="/kora.css?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '' %>">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230b5d3f'/><path d='M11 7v18M11 16l10-9M11 16l10 9' stroke='%23c8f169' stroke-width='2.6' stroke-linecap='round' fill='none'/></svg>">
 </head>
 <body>
@@ -19,13 +19,13 @@
     <a class="logo" href="/"><svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#0b5d3f"/><path d="M11 7v18M11 16l10-9M11 16l10 9" stroke="#c8f169" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M16 9v14M19.5 9v14" stroke="#f3f0e8" stroke-opacity=".28" stroke-width="1"/></svg>Kora</a>
     <% if (u) { %>
       <nav class="nav" aria-label="Main">
-        <a href="/market" class="<%= here === 'market' ? 'on' : '' %>">Market</a>
-        <a href="/merchant" class="<%= here === 'merchant' ? 'on' : '' %>">Merchant badge</a>
-        <a href="/account" class="<%= here === 'account' ? 'on' : '' %>">Your details</a>
+        <a href="/market" class="<%= here === 'market' ? 'on' : '' %>"><%- icon('market') %>Market</a>
+        <a href="/merchant" class="<%= here === 'merchant' ? 'on' : '' %>"><%- icon('badge') %>Merchant badge</a>
+        <a href="/account" class="<%= here === 'account' ? 'on' : '' %>"><%- icon('user') %>Your details</a>
       </nav>
       <div class="who">
-        <span class="name"><%= u.first_name || 'Trader' %></span>
-        <form method="post" action="/logout" class="inline"><button class="btn small" type="submit">Sign out</button></form>
+        <span class="name"><span class="avatar hue-<%= hue(u.first_name || 'Trader') %>" aria-hidden="true"><%= initials(u.first_name || 'Trader') %></span><%= u.first_name || 'Trader' %></span>
+        <form method="post" action="/logout" class="inline"><button class="btn small" type="submit" aria-label="Sign out"><%- icon('logout') %><span class="hide-sm">Sign out</span></button></form>
       </div>
     <% } else { %>
       <div style="flex:1"></div>

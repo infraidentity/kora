@@ -7,6 +7,7 @@ const SqliteStore = require('./session-store');
 const { createInfraClient } = require('./infra/client');
 const { currentUser } = require('./services/session');
 const { warnings } = require('./services/identity');
+const viewIcons = require('./services/icons');
 
 /**
  * Kora — a peer-to-peer USDC ↔ naira marketplace built on INFRA.
@@ -47,6 +48,10 @@ function createApp({ infra } = {}) {
     next();
   });
   app.use(express.static(path.join(__dirname, '../client/public'), { maxAge: config.isProduction ? '1h' : 0 }));
+  // A short fingerprint of the style sheet, added to its link, so a new
+  // design reaches browsers at once instead of after the 1-hour cache.
+  const cssVersion = require('crypto').createHash('sha1')
+    .update(require('fs').readFileSync(path.join(__dirname, '../client/public/kora.css'))).digest('hex').slice(0, 10);
 
   // Webhooks read the raw body to check signatures, so they come before the
   // body parsers and sessions.
@@ -70,6 +75,8 @@ function createApp({ infra } = {}) {
     res.locals.accountsUrl = config.accountsUrl;
     res.locals.ngn = (n) => '₦' + Math.round(n).toLocaleString('en-NG');
     res.locals.warningsFor = warnings;
+    Object.assign(res.locals, viewIcons);
+    res.locals.cssVersion = cssVersion;
     res.locals.active = req.path.split('/')[1] === 'offers' || req.path.startsWith('/trades') ? 'market' : req.path.split('/')[1];
     next();
   });

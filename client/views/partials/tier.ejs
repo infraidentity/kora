@@ -4,7 +4,7 @@
   <div>
     <div class="row">
       <h2><%= tier.name %></h2>
-      <% if (user.kyc_status === 'verified') { %><span class="pill ok">Verified by INFRA</span>
+      <% if (user.kyc_status === 'verified') { %><span class="pill infra"><%- infraMark() %> Verified by INFRA</span>
       <% } else if (user.kyc_status === 'pending') { %><span class="pill warn">INFRA is checking your ID</span>
       <% } else if (user.kyc_status === 'rejected') { %><span class="pill bad">Verification failed</span>
       <% } else if (user.kyc_status === 'suspended') { %><span class="pill bad">Verification suspended</span>
@@ -20,8 +20,8 @@
     <% }) %>
   </div>
   <div class="row">
-    <% if (next) { %><a class="btn" href="<%= typeof accountsUrl !== 'undefined' ? accountsUrl : 'https://accounts.infraidentity.com' %>" target="_blank" rel="noopener">Open INFRA Accounts</a><% } %>
-    <form method="post" action="/refresh" class="inline"><button class="btn" type="submit">Refresh</button></form>
+    <% if (next) { %><a class="btn" href="<%= typeof accountsUrl !== 'undefined' ? accountsUrl : 'https://accounts.infraidentity.com' %>" target="_blank" rel="noopener"><%- infraMark() %> Open INFRA Accounts</a><% } %>
+    <form method="post" action="/refresh" class="inline"><button class="btn" type="submit"><%- icon('refresh') %> Refresh</button></form>
   </div>
 </div>
 <script>

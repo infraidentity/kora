@@ -26,7 +26,7 @@
   </section>
 
   <section class="card stack" aria-live="polite">
-    <h2>Result</h2>
+    <div class="card-head"><span class="card-icon"><%- icon('seal') %></span><div><h2>Result</h2><span class="subtle">Checked against INFRA's public key</span></div></div>
     <% if (typeof error !== 'undefined' && error) { %>
       <p class="notice error"><%= error %></p>
     <% } else if (!result) { %>
@@ -38,7 +38,7 @@
       <p class="subtle"><%= kind === 'credential' ? 'Checked as a verified facts credential.' : 'Checked as a Connect result.' %></p>
       <ul style="margin:0;padding-left:0;list-style:none" class="stack">
         <% (result.steps || []).forEach(function (s) { %>
-          <li><span class="pill <%= s.ok ? 'ok' : 'bad' %>"><%= s.ok ? '✓' : '✗' %></span> <%= s.name %><% if (s.detail) { %> <span class="subtle">(<%= s.detail %>)</span><% } %></li>
+          <li><span class="pill <%= s.ok ? 'ok' : 'bad' %>"><%- icon(s.ok ? 'check' : 'x') %></span> <%= s.name %><% if (s.detail) { %> <span class="subtle">(<%= s.detail %>)</span><% } %></li>
         <% }) %>
       </ul>
       <% if (result.ok && kind === 'credential') { %>

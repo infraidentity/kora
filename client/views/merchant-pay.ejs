@@ -1,7 +1,7 @@
 <%- include('partials/head') %>
 
-<p><a href="/merchant">← Merchant badge</a></p>
-<div class="page-head" style="margin-top:12px">
+<a class="back" href="/merchant"><%- icon('arrow-left') %> Merchant badge</a>
+<div class="page-head">
   <div>
     <h1>Pay for your merchant badge</h1>
     <p>Connect the wallet you'll pay from. INFRA checks it and gives a price for that wallet. Then your wallet signs a one-off USDC payment on Base. You only sign; you don't pay gas, and INFRA takes the payment only after your verification is ready.</p>
@@ -18,7 +18,7 @@
         <li id="step-wallet" class="now">
           <h3>Connect your wallet</h3>
           <p class="subtle" id="wallet-line">Use the wallet you want to pay from.</p>
-          <button class="btn small" id="connect-wallet" type="button" style="margin-top:8px">Connect wallet</button>
+          <button class="btn small" id="connect-wallet" type="button" style="margin-top:8px"><%- icon('wallet') %> Connect wallet</button>
         </li>
         <li id="step-link" hidden>
           <h3>Link this wallet to your INFRA account</h3>
@@ -35,7 +35,7 @@
   </section>
 
   <section class="card stack">
-    <h2>Before you sign</h2>
+    <div class="card-head"><span class="card-icon"><%- icon('file') %></span><div><h2>Before you sign</h2><span class="subtle">Check these in your wallet too</span></div></div>
     <dl class="facts">
       <dt>Amount</dt><dd id="fact-amount">—</dd>
       <dt>Network</dt><dd id="fact-network">—</dd>
@@ -43,7 +43,7 @@
       <dt>Kora receives</dt><dd>Your name, country and INFRA verification status</dd>
     </dl>
     <p class="subtle">Check the "To" address in your wallet matches <strong>Paid to</strong> above, and INFRA's published address in INFRA Accounts. Never sign a payment to any other address.</p>
-    <p class="subtle">Need test USDC on Base Sepolia? Use a faucet such as faucet.circle.com.</p>
+    <p class="subtle">Need test USDC on Base Sepolia? It's free from <a href="https://faucet.circle.com" target="_blank" rel="noopener">faucet.circle.com</a>.</p>
   </section>
 </div>
 

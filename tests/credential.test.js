@@ -139,7 +139,7 @@ describe('Your details shows the check', () => {
       checkCredential: (c) => checkCredential(c, { jwks, issuer: ISSUER, audience: CLIENT }),
     });
     const page = (await agent.get('/account')).text;
-    expect(page).toContain('Signed by INFRA ✓');
+    expect(page).toMatch(/infra-mark[^]*Signed by INFRA/);
     expect(page).toContain('test-key');
   });
 

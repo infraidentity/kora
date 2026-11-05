@@ -298,3 +298,84 @@ th { color: var(--subtle); font-weight: 650; border-top: 0; font-size: 11px; tex
 
 footer.foot { border-top: 1px solid var(--line); padding: 22px 0 36px; color: var(--subtle); font-size: 13px; }
 footer.foot strong { color: var(--fg); font-family: var(--font-display); }
+
+/* ── Icons, INFRA mark, and the pieces built on them ────────────────────── */
+.ico { width: 18px; height: 18px; flex: none; display: inline-block; vertical-align: -3px; }
+.btn .ico { width: 16px; height: 16px; }
+.btn.small .ico { width: 14px; height: 14px; }
+.nav a { display: inline-flex; align-items: center; gap: 7px; }
+.nav a .ico { width: 16px; height: 16px; opacity: .8; }
+.nav a.on .ico { opacity: 1; }
+.infra-mark, .infra-mark img { width: 18px; height: 18px; display: inline-block; flex: none; object-fit: contain; }
+.btn .infra-mark, .btn .infra-mark img { width: 18px; height: 18px; }
+.infra-btn .infra-mark, .infra-btn .infra-mark img { width: 24px; height: 24px; }
+.pill .infra-mark, .pill .infra-mark img { width: 13px; height: 13px; }
+.pill .ico { width: 13px; height: 13px; vertical-align: -2px; }
+.pill.infra { background: var(--ok-soft); color: var(--ok); }
+.notice.signed { display: block; }
+.notice.signed > .infra-mark { vertical-align: -3px; margin-right: 4px; }
+.hide-sm { display: inline; }
+@media (max-width: 560px) { .hide-sm { display: none; } }
+
+.who .name .avatar { width: 28px; height: 28px; font-size: 11px; }
+.who .name::before { display: none; }
+
+.eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--brand); margin-bottom: 10px; }
+.eyebrow .ico { width: 15px; height: 15px; }
+
+.back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 600; font-size: 14px; margin-bottom: 14px; }
+.back:hover { color: var(--fg); text-decoration: none; }
+.back .ico { width: 16px; height: 16px; }
+
+.card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.card-head h2 { line-height: 1.2; }
+.card-head .subtle { display: block; margin-top: 2px; }
+.card-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--brand-soft); color: var(--brand); }
+.card-icon .ico { width: 20px; height: 20px; }
+.buy-tone { background: var(--ok-soft) !important; color: var(--buy) !important; }
+.sell-tone { background: var(--bad-soft) !important; color: var(--sell) !important; }
+.bad-tone { background: var(--bad-soft) !important; color: var(--bad) !important; }
+
+.empty { display: grid; justify-items: center; gap: 8px; text-align: center; padding: 26px 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); color: var(--subtle); }
+.empty .ico { width: 26px; height: 26px; }
+.empty p { max-width: 280px; font-size: 14px; }
+
+/* Market summary */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 720px) { .stats { grid-template-columns: 1fr 1fr; } .stats .stat:last-child { grid-column: 1 / -1; } }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 2px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.stat::after { content: ""; position: absolute; right: -10px; top: 0; bottom: 0; width: 90px; background: repeating-linear-gradient(90deg, transparent 0 9px, color-mix(in srgb, var(--brand) 9%, transparent) 9px 10px); -webkit-mask-image: linear-gradient(90deg, transparent, #000); mask-image: linear-gradient(90deg, transparent, #000); }
+.stat-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 650; color: var(--muted); }
+.stat-label .ico { width: 15px; height: 15px; color: var(--brand); }
+.stat-value { font-family: var(--font-mono); font-size: clamp(20px, 3vw, 26px); font-weight: 700; letter-spacing: -0.02em; }
+
+/* Offer rows: avatar | who | rate + action */
+.offer { grid-template-columns: auto 1fr auto; }
+.offer-end { display: flex; align-items: center; gap: 12px; }
+.offer .rate { display: grid; text-align: right; line-height: 1.15; }
+.offer .rate small { font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--subtle); }
+.offer .numbers strong { color: var(--fg); font-weight: 650; }
+@media (max-width: 520px) {
+  .offer { grid-template-columns: auto 1fr; }
+  .offer-end { grid-column: 1 / -1; justify-content: space-between; }
+  .offer .rate { text-align: left; }
+}
+.avatar .ico { width: 18px; height: 18px; }
+.avatar.lg { width: 56px; height: 56px; font-size: 20px; }
+.hue-1 { background: #dcefe4; color: #0b5d3f; }
+.hue-2 { background: #e5e9fb; color: #3446a8; }
+.hue-3 { background: #f8ead0; color: #8a5200; }
+.hue-4 { background: #f6e1ef; color: #8f2c6b; }
+.hue-5 { background: #e2f1f3; color: #145f6b; }
+@media (prefers-color-scheme: dark) {
+  .hue-1 { background: #12301f; color: #5be3a1; }
+  .hue-2 { background: #1c2347; color: #a9b6ff; }
+  .hue-3 { background: #33270f; color: #f0c574; }
+  .hue-4 { background: #3a1830; color: #f2a6d6; }
+  .hue-5 { background: #10313a; color: #7fd6e3; }
+}
+.rate-inline { font-family: var(--font-mono); font-weight: 700; color: var(--fg); }
+
+/* Numbered steps used as plain lists (merchant page) */
+.steps h3 { font-size: 15px; }
+.steps p { margin-top: 2px; }

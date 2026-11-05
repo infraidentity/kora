@@ -1,44 +1,75 @@
 <%- include('partials/head') %>
+<%
+  var bestBuy = sells.length ? Math.min.apply(null, sells.map(function (o) { return o.rate_ngn; })) : null;
+  var bestSell = buys.length ? Math.max.apply(null, buys.map(function (o) { return o.rate_ngn; })) : null;
+  var people = {};
+  sells.concat(buys).forEach(function (o) { if (o.verified) people[o.name] = 1; });
+  var verifiedCount = Object.keys(people).length;
+%>
 
 <div class="page-head">
   <div>
-    <h1>Market</h1>
-    <p>Buy or sell USDC for naira with people INFRA has verified. Pick an offer to start a trade.</p>
+    <span class="eyebrow"><%- icon('market') %> Market</span>
+    <h1>Buy and sell USDC for naira</h1>
+    <p>Every trader here has verified their identity with INFRA. Pick an offer to start a trade.</p>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat-label"><%- icon('arrow-down-left') %> Best price to buy</span>
+    <span class="stat-value"><%= bestBuy ? ngn(bestBuy) : '—' %></span>
+    <span class="subtle">per USDC</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label"><%- icon('arrow-up-right') %> Best price to sell</span>
+    <span class="stat-value"><%= bestSell ? ngn(bestSell) : '—' %></span>
+    <span class="subtle">per USDC</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label"><%- icon('users') %> Verified traders</span>
+    <span class="stat-value"><%= verifiedCount %></span>
+    <span class="subtle">with open offers</span>
   </div>
 </div>
 
 <%- include('partials/tier') %>
 
 <div class="grid two" style="margin-top:16px">
-  <% [['sell', 'Buy USDC', 'People selling USDC', sells], ['buy', 'Sell USDC', 'People buying USDC', buys]].forEach(function (col) { %>
+  <% [['sell', 'Buy USDC', 'From people selling', sells, 'arrow-down-left'], ['buy', 'Sell USDC', 'To people buying', buys, 'arrow-up-right']].forEach(function (col) { %>
     <section class="card">
-      <div class="spread">
-        <h2 class="col-head"><span class="tick <%= col[0] %>" aria-hidden="true"></span><%= col[1] %></h2>
-        <span class="subtle"><%= col[2] %></span>
+      <div class="card-head">
+        <span class="card-icon <%= col[0] === 'sell' ? 'buy-tone' : 'sell-tone' %>"><%- icon(col[4]) %></span>
+        <div>
+          <h2><%= col[1] %></h2>
+          <span class="subtle"><%= col[2] %> · <%= col[3].length %> offer<%= col[3].length === 1 ? '' : 's' %></span>
+        </div>
       </div>
       <% if (!col[3].length) { %>
-        <p class="muted" style="margin-top:12px">No offers yet.</p>
+        <div class="empty"><%- icon('inbox') %><p>No offers yet.</p></div>
       <% } else { %>
-        <ul class="offers" style="margin-top:6px">
-          <% col[3].forEach(function (o) { %>
-            <li class="offer">
-              <span class="avatar" aria-hidden="true"><%= String(o.name || '?').split(/\s+/).map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase() %></span>
+        <ul class="offers">
+          <% col[3].forEach(function (o) { var tn = traderName(o.name); %>
+            <li class="offer" title="<%= o.name %>">
+              <span class="avatar hue-<%= hue(o.name) %>" aria-hidden="true"><%= initials(o.name) %></span>
               <div>
                 <div class="who-line">
-                  <%= o.name %>
-                  <% if (o.verified) { %><span class="pill ok">Verified</span><% } else { %><span class="pill">Unverified</span><% } %>
-                  <% if (o.merchant_name) { %><span class="pill brand" title="PayV merchant check: <%= o.merchant_name %>">Merchant</span><% } %>
+                  <span><%= tn.first %></span>
+                  <% if (tn.demo) { %><span class="pill">Demo</span><% } %>
+                  <% if (o.verified) { %><span class="pill infra"><%- infraMark() %> Verified</span><% } else { %><span class="pill">Unverified</span><% } %>
+                  <% if (o.merchant_name) { %><span class="pill brand" title="PayV merchant check: <%= o.merchant_name %>"><%- icon('badge') %> Merchant</span><% } %>
                   <% if (o.mine) { %><span class="pill">Yours</span><% } %>
                 </div>
-                <div class="numbers">
-                  <span class="rate"><%= ngn(o.rate_ngn) %></span> per USDC · up to <%= o.amount_usdc.toLocaleString('en-NG') %> USDC
-                </div>
+                <div class="numbers">Up to <strong><%= o.amount_usdc.toLocaleString('en-NG') %> USDC</strong></div>
               </div>
-              <% if (o.mine) { %>
-                <form method="post" action="/offers/<%= o.id %>/close" class="inline"><button class="btn small" type="submit">Close</button></form>
-              <% } else { %>
-                <a class="btn small <%= tier.limitNgn ? 'primary' : '' %>" href="/offers/<%= o.id %>"><%= col[1] %></a>
-              <% } %>
+              <div class="offer-end">
+                <span class="rate"><%= ngn(o.rate_ngn) %><small>per USDC</small></span>
+                <% if (o.mine) { %>
+                  <form method="post" action="/offers/<%= o.id %>/close" class="inline"><button class="btn small" type="submit"><%- icon('x') %> Close</button></form>
+                <% } else { %>
+                  <a class="btn small <%= tier.limitNgn ? 'primary' : '' %>" href="/offers/<%= o.id %>"><%= col[1] %> <%- icon('arrow-right') %></a>
+                <% } %>
+              </div>
             </li>
           <% }) %>
         </ul>
@@ -49,11 +80,14 @@
 
 <div class="grid two" style="margin-top:16px">
   <section class="card">
-    <h2>Post an offer</h2>
+    <div class="card-head">
+      <span class="card-icon"><%- icon('plus') %></span>
+      <div><h2>Post an offer</h2><span class="subtle">Other verified traders can take it</span></div>
+    </div>
     <% if (!tier.limitNgn) { %>
-      <p class="muted" style="margin-top:8px">Posting opens once INFRA verifies you.</p>
+      <div class="empty"><%- icon('lock') %><p>Posting opens once INFRA verifies you.</p></div>
     <% } else { %>
-      <form method="post" action="/offers" style="margin-top:14px">
+      <form method="post" action="/offers">
         <div class="fields">
           <div>
             <label for="side">I want to</label>
@@ -73,28 +107,32 @@
         </div>
         <div class="spread" style="margin-top:14px">
           <span class="subtle">Your limit: <%= ngn(tier.limitNgn) %> per offer</span>
-          <button class="btn primary" type="submit">Post offer</button>
+          <button class="btn primary" type="submit"><%- icon('plus') %> Post offer</button>
         </div>
       </form>
     <% } %>
   </section>
 
   <section class="card">
-    <h2>Your trades</h2>
+    <div class="card-head">
+      <span class="card-icon"><%- icon('clock') %></span>
+      <div><h2>Your trades</h2><span class="subtle">Trades you start or receive</span></div>
+    </div>
     <% if (!trades.length) { %>
-      <p class="muted" style="margin-top:8px">Trades you start or receive show up here.</p>
+      <div class="empty"><%- icon('inbox') %><p>Nothing here yet. Take an offer to start your first trade.</p></div>
     <% } else { %>
-      <ul class="offers" style="margin-top:6px">
-        <% trades.forEach(function (t) { %>
+      <ul class="offers">
+        <% trades.forEach(function (t) { var other = t.maker_id ? (t.maker_first_name || 'Kora trader') : traderName(t.demo_name).first; %>
           <li class="offer">
-            <span class="avatar" aria-hidden="true">#</span>
+            <span class="avatar <%= t.side === 'buy' ? 'buy-tone' : 'sell-tone' %>" aria-hidden="true"><%- icon(t.side === 'buy' ? 'arrow-down-left' : 'arrow-up-right') %></span>
             <div>
               <div class="who-line">#<%= t.id %> · <span class="side-<%= t.side %>"><%= t.side === 'buy' ? 'Buying' : 'Selling' %></span> <%= t.amount_usdc %> USDC</div>
-              <div class="numbers"><%= ngn(t.total_ngn) %> · with <%= t.maker_id ? (t.maker_first_name || 'Kora trader') : t.demo_name %></div>
+              <div class="numbers"><%= ngn(t.total_ngn) %> · with <%= other %></div>
             </div>
-            <a class="btn small" href="/trades/<%= t.id %>">
-              <%= { open: 'Open', paid: 'Paid', released: 'Done', cancelled: 'Cancelled' }[t.status] %>
-            </a>
+            <div class="offer-end">
+              <span class="pill <%= t.status === 'released' ? 'ok' : t.status === 'cancelled' ? 'bad' : 'warn' %>"><%= { open: 'Open', paid: 'Paid', released: 'Done', cancelled: 'Cancelled' }[t.status] %></span>
+              <a class="btn small" href="/trades/<%= t.id %>">Open <%- icon('arrow-right') %></a>
+            </div>
           </li>
         <% }) %>
       </ul>

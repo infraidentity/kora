@@ -9,8 +9,8 @@
   const levelText = (v) => v && v.kyc_level ? ' · ' + v.kyc_level.replace('level_', 'level ') : '';
 %>
 
-<p><a href="/market">← Market</a></p>
-<div class="page-head" style="margin-top:12px">
+<a class="back" href="/market"><%- icon('arrow-left') %> Market</a>
+<div class="page-head">
   <div>
     <div class="row">
       <h1>Trade #<%= trade.id %></h1>
@@ -25,7 +25,7 @@
 
 <div class="grid two">
   <section class="card">
-    <h2>Steps</h2>
+    <div class="card-head"><span class="card-icon"><%- icon('clock') %></span><div><h2>Steps</h2><span class="subtle">Naira first, then USDC</span></div></div>
     <ol class="steps" style="margin-top:16px">
       <li class="<%= stepClass(0) %>">
         <h3><%= buyerName %> <%= iAmBuyer ? 'send' : 'sends' %> <%= ngn(trade.total_ngn) %></h3>
@@ -66,7 +66,7 @@
 
   <div>
     <section class="card stack" id="verified-names">
-      <h2>Verified names on this trade</h2>
+      <div class="card-head"><span class="card-icon"><%- icon('users') %></span><div><h2>Verified names on this trade</h2><span class="subtle">Shared through INFRA Connect</span></div></div>
       <p class="muted">Before any money moves, both traders share their verified name from INFRA. Kora shows each side the other's.</p>
 
       <h3><%= iAmSeller ? 'You (seller)' : 'You (buyer)' %></h3>
@@ -82,7 +82,7 @@
           <input name="code" placeholder="CNX-AB12-CD34" autocomplete="off" autocapitalize="characters" aria-label="Your INFRA Connect code" style="flex:1;min-width:160px">
           <button class="btn primary" type="submit">Share</button>
         </form>
-        <a class="btn small" href="<%= accountsUrl %>" target="_blank" rel="noopener">Open INFRA Accounts</a>
+        <a class="btn small" href="<%= accountsUrl %>" target="_blank" rel="noopener"><%- infraMark() %> Open INFRA Accounts</a>
       <% } else { %>
         <p class="muted">Not shared.</p>
       <% } %>
@@ -105,11 +105,11 @@
     </section>
 
     <section class="card stack">
-      <h2>INFRA proof</h2>
+      <div class="card-head"><span class="card-icon"><%- icon('seal') %></span><div><h2>INFRA proof</h2><span class="subtle">Stamped on the trade when it opened</span></div></div>
       <% if (trade.taker_proof_hash) { %>
         <p class="muted"><%= iAmTaker ? 'Your' : (trade.taker_first_name || 'Their') + "'s" %> INFRA verification was stamped on this trade when it opened. Anyone can ask INFRA whether it is still valid.</p>
         <p class="mono subtle" style="overflow-wrap:anywhere"><%= trade.taker_proof_hash %></p>
-        <form method="post" action="/trades/<%= trade.id %>/check-proof"><button class="btn small" type="submit">Check with INFRA</button></form>
+        <form method="post" action="/trades/<%= trade.id %>/check-proof"><button class="btn small" type="submit"><%- infraMark() %> Check with INFRA</button></form>
       <% } else { %>
         <p class="muted">No INFRA proof was available when this trade opened. Proofs appear once INFRA issues a "Government ID verified" claim.</p>
       <% } %>

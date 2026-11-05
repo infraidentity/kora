@@ -1,17 +1,20 @@
 <%- include('partials/head') %>
 <% const takerBuys = offer.side === 'sell'; %>
 
-<p><a href="/market">← Market</a></p>
-<div class="page-head" style="margin-top:12px">
-  <div>
-    <h1><%= takerBuys ? 'Buy' : 'Sell' %> USDC <%= takerBuys ? 'from' : 'to' %> <%= offer.name %></h1>
-    <p><%= ngn(offer.rate_ngn) %> per USDC · up to <%= offer.amount_usdc.toLocaleString('en-NG') %> USDC available</p>
+<a class="back" href="/market"><%- icon('arrow-left') %> Market</a>
+<div class="page-head">
+  <div class="row" style="gap:16px;align-items:center">
+    <span class="avatar lg hue-<%= hue(offer.name) %>" aria-hidden="true"><%= initials(offer.name) %></span>
+    <div>
+      <h1><%= takerBuys ? 'Buy' : 'Sell' %> USDC <%= takerBuys ? 'from' : 'to' %> <%= offer.name %></h1>
+      <p><span class="rate-inline"><%= ngn(offer.rate_ngn) %></span> per USDC · up to <%= offer.amount_usdc.toLocaleString('en-NG') %> USDC available</p>
+    </div>
   </div>
 </div>
 
 <div class="grid two">
   <section class="card">
-    <h2>Start a trade</h2>
+    <div class="card-head"><span class="card-icon <%= takerBuys ? 'buy-tone' : 'sell-tone' %>"><%- icon(takerBuys ? 'arrow-down-left' : 'arrow-up-right') %></span><div><h2>Start a trade</h2><span class="subtle">Your limit: <%= tier.limitNgn ? ngn(tier.limitNgn) : 'not verified yet' %> per trade</span></div></div>
     <% if (!tier.limitNgn) { %>
       <p class="muted" style="margin-top:8px">Trading opens once INFRA verifies you. <%= next %></p>
     <% } else { %>
@@ -40,7 +43,7 @@
   </section>
 
   <section class="card stack">
-    <h2>About <%= offer.name %></h2>
+    <div class="card-head"><span class="card-icon"><%- icon('id-card') %></span><div><h2>About <%= offer.name %></h2><span class="subtle">What INFRA confirms about this trader</span></div></div>
     <dl class="facts">
       <dt>Identity</dt>
       <dd><% if (!offer.user_id) { %>Demo trader (always available for testing)<% } else if (offer.kyc_status === 'verified') { %>Verified by INFRA<% } else { %>Not verified<% } %></dd>

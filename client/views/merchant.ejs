@@ -2,7 +2,8 @@
 
 <div class="page-head">
   <div>
-    <h1>Merchant badge</h1>
+    <span class="eyebrow"><%- icon('badge') %> Merchant badge</span>
+    <h1>Get the merchant badge</h1>
     <p>Trade in volume? Get the Merchant badge on your offers. Kora reuses your INFRA verification instead of asking for documents, and you pay a small fee in USDC from your own wallet each time. No subscription.</p>
   </div>
 </div>
@@ -13,24 +14,24 @@
 
 <div class="grid two">
   <section class="card stack">
-    <h2>Get the badge</h2>
-    <ol class="muted" style="margin:0;padding-left:20px">
-      <li>In <a href="<%= accountsUrl %>" target="_blank" rel="noopener">INFRA Accounts</a>, tap <strong>Connect an app</strong> and make a code.</li>
-      <li>Paste it below. INFRA records that you agreed to share with Kora.</li>
-      <li>Connect your wallet. INFRA checks it and Kora shows the fee for that wallet.</li>
-      <li>Your wallet signs a USDC payment on Base. Nothing moves until INFRA has your verification ready.</li>
+    <div class="card-head"><span class="card-icon"><%- icon('badge') %></span><div><h2>How it works</h2><span class="subtle">About two minutes</span></div></div>
+    <ol class="steps">
+      <li><h3>Make a code in INFRA Accounts</h3><p class="muted">In <a href="<%= accountsUrl %>" target="_blank" rel="noopener">INFRA Accounts</a>, tap <strong>Connect an app</strong>.</p></li>
+      <li><h3>Paste it below</h3><p class="muted">INFRA records that you agreed to share with Kora.</p></li>
+      <li><h3>Connect your wallet</h3><p class="muted">INFRA checks it and Kora shows the fee for that wallet.</p></li>
+      <li><h3>Sign the payment</h3><p class="muted">Nothing moves until INFRA has your verification ready.</p></li>
     </ol>
     <form method="post" action="/merchant/start" class="row">
       <input name="code" placeholder="CNX-AB12-CD34" autocomplete="off" autocapitalize="characters" aria-label="INFRA Connect code" required style="flex:1;min-width:180px" <%= configured ? '' : 'disabled' %>>
-      <button class="btn primary" type="submit" <%= configured ? '' : 'disabled' %>>Continue</button>
+      <button class="btn primary" type="submit" <%= configured ? '' : 'disabled' %>>Continue <%- icon('arrow-right') %></button>
     </form>
-    <p class="subtle">Becoming verified on INFRA is always free. The fee is only for Kora reusing a verification you already have. Test mode uses an INFRA sandbox user and test USDC on Base Sepolia.</p>
+    <p class="subtle">Becoming verified on INFRA is always free. The fee is only for Kora reusing a verification you already have. Until INFRA opens live payments, the fee is paid in test USDC on Base Sepolia: no real money.</p>
   </section>
 
   <section class="card">
-    <h2>Your merchant checks</h2>
+    <div class="card-head"><span class="card-icon"><%- icon('wallet') %></span><div><h2>Your merchant checks</h2><span class="subtle">Payments for your badge</span></div></div>
     <% if (!checks.length) { %>
-      <p class="muted" style="margin-top:8px">Nothing yet.</p>
+      <div class="empty"><%- icon('wallet') %><p>Nothing yet. Your first check appears here once you paste a code.</p></div>
     <% } else { %>
       <ul class="offers" style="margin-top:6px">
         <% checks.forEach(function (c) { %>
