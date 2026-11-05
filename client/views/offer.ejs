@@ -1,0 +1,54 @@
+<%- include('partials/head') %>
+<% const takerBuys = offer.side === 'sell'; %>
+
+<p><a href="/market">← Market</a></p>
+<div class="page-head" style="margin-top:12px">
+  <div>
+    <h1><%= takerBuys ? 'Buy' : 'Sell' %> USDC <%= takerBuys ? 'from' : 'to' %> <%= offer.name %></h1>
+    <p><%= ngn(offer.rate_ngn) %> per USDC · up to <%= offer.amount_usdc.toLocaleString('en-NG') %> USDC available</p>
+  </div>
+</div>
+
+<div class="grid two">
+  <section class="card">
+    <h2>Start a trade</h2>
+    <% if (!tier.limitNgn) { %>
+      <p class="muted" style="margin-top:8px">Trading opens once INFRA verifies you. <%= next %></p>
+    <% } else { %>
+      <form method="post" action="/offers/<%= offer.id %>/trade" style="margin-top:14px" id="trade-form">
+        <div class="field">
+          <label for="amount">How much USDC?</label>
+          <input id="amount" name="amount_usdc" type="number" min="1" max="<%= offer.amount_usdc %>" step="0.01" required inputmode="decimal" placeholder="100">
+        </div>
+        <p class="muted" style="margin-top:10px" id="total">You <%= takerBuys ? 'pay' : 'receive' %> — in naira.</p>
+        <p class="subtle" style="margin-top:4px">Your limit is <%= ngn(tier.limitNgn) %> per trade.</p>
+        <button class="btn primary block" type="submit" style="margin-top:14px"><%= takerBuys ? 'Buy' : 'Sell' %> USDC</button>
+      </form>
+      <script>
+        (function () {
+          var rate = <%= JSON.stringify(offer.rate_ngn) %>;
+          var input = document.getElementById('amount');
+          var out = document.getElementById('total');
+          var verb = <%- JSON.stringify(takerBuys ? 'pay' : 'receive') %>;
+          input.addEventListener('input', function () {
+            var n = Number(input.value) * rate;
+            out.textContent = n > 0 ? 'You ' + verb + ' ₦' + Math.round(n).toLocaleString('en-NG') + '.' : 'You ' + verb + ' — in naira.';
+          });
+        })();
+      </script>
+    <% } %>
+  </section>
+
+  <section class="card stack">
+    <h2>About <%= offer.name %></h2>
+    <dl class="facts">
+      <dt>Identity</dt>
+      <dd><% if (!offer.user_id) { %>Demo trader (always available for testing)<% } else if (offer.kyc_status === 'verified') { %>Verified by INFRA<% } else { %>Not verified<% } %></dd>
+      <% if (offer.country) { %><dt>Country</dt><dd><%= offer.country %></dd><% } %>
+      <% if (offer.verified_at) { %><dt>Verified since</dt><dd><%= new Date(offer.verified_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) %></dd><% } %>
+    </dl>
+    <p class="subtle">Kora shows traders by first name only. Once the trade starts, you can ask them for an INFRA Connect code to see their full verified name before any money moves.</p>
+  </section>
+</div>
+
+<%- include('partials/foot') %>

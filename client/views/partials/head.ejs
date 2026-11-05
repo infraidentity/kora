@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' ? title + ' · Kora' : 'Kora' %></title>
+  <meta name="description" content="Kora: trade USDC and naira with people verified by INFRA.">
+  <link rel="stylesheet" href="/kora.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f6b4f'/><text x='16' y='22' font-size='17' font-family='Arial' font-weight='700' text-anchor='middle' fill='white'>K</text></svg>">
+</head>
+<body>
+<% const here = typeof active !== 'undefined' ? active : ''; const u = typeof user !== 'undefined' ? user : null; %>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="/"><span class="logo-mark">K</span>Kora</a>
+    <% if (u) { %>
+      <nav class="nav" aria-label="Main">
+        <a href="/market" class="<%= here === 'market' ? 'on' : '' %>">Market</a>
+        <a href="/merchant" class="<%= here === 'merchant' ? 'on' : '' %>">Merchant badge</a>
+        <a href="/account" class="<%= here === 'account' ? 'on' : '' %>">Your details</a>
+      </nav>
+      <div class="who">
+        <span class="name"><%= u.first_name || 'Trader' %></span>
+        <form method="post" action="/logout" class="inline"><button class="btn small" type="submit">Sign out</button></form>
+      </div>
+    <% } else { %>
+      <div style="flex:1"></div>
+    <% } %>
+  </div>
+</header>
+<main>
+<div class="wrap">
+<% if (typeof flash !== 'undefined' && flash) { %>
+  <div class="notice <%= flash.type === 'ok' ? 'ok' : 'error' %>" role="status"><%= flash.text %></div>
+<% } %>

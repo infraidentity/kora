@@ -1,0 +1,103 @@
+<%- include('partials/head') %>
+
+<div class="page-head">
+  <div>
+    <h1>Market</h1>
+    <p>Buy or sell USDC for naira with people INFRA has verified. Pick an offer to start a trade.</p>
+  </div>
+</div>
+
+<%- include('partials/tier') %>
+
+<div class="grid two" style="margin-top:16px">
+  <% [['sell', 'Buy USDC', 'People selling USDC', sells], ['buy', 'Sell USDC', 'People buying USDC', buys]].forEach(function (col) { %>
+    <section class="card">
+      <div class="spread">
+        <h2><%= col[1] %></h2>
+        <span class="subtle"><%= col[2] %></span>
+      </div>
+      <% if (!col[3].length) { %>
+        <p class="muted" style="margin-top:12px">No offers yet.</p>
+      <% } else { %>
+        <ul class="offers" style="margin-top:6px">
+          <% col[3].forEach(function (o) { %>
+            <li class="offer">
+              <div>
+                <div class="who-line">
+                  <%= o.name %>
+                  <% if (o.verified) { %><span class="pill ok">Verified</span><% } else { %><span class="pill">Unverified</span><% } %>
+                  <% if (o.merchant_name) { %><span class="pill brand" title="PayV merchant check: <%= o.merchant_name %>">Merchant</span><% } %>
+                  <% if (o.mine) { %><span class="pill">Yours</span><% } %>
+                </div>
+                <div class="numbers">
+                  <span class="rate"><%= ngn(o.rate_ngn) %></span> per USDC · up to <%= o.amount_usdc.toLocaleString('en-NG') %> USDC
+                </div>
+              </div>
+              <% if (o.mine) { %>
+                <form method="post" action="/offers/<%= o.id %>/close" class="inline"><button class="btn small" type="submit">Close</button></form>
+              <% } else { %>
+                <a class="btn small <%= tier.limitNgn ? 'primary' : '' %>" href="/offers/<%= o.id %>"><%= col[1] %></a>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+  <% }) %>
+</div>
+
+<div class="grid two" style="margin-top:16px">
+  <section class="card">
+    <h2>Post an offer</h2>
+    <% if (!tier.limitNgn) { %>
+      <p class="muted" style="margin-top:8px">Posting opens once INFRA verifies you.</p>
+    <% } else { %>
+      <form method="post" action="/offers" style="margin-top:14px">
+        <div class="fields">
+          <div>
+            <label for="side">I want to</label>
+            <select id="side" name="side">
+              <option value="sell">Sell USDC</option>
+              <option value="buy">Buy USDC</option>
+            </select>
+          </div>
+          <div>
+            <label for="amount">Amount (USDC)</label>
+            <input id="amount" name="amount_usdc" type="number" min="10" max="100000" step="1" required inputmode="numeric" placeholder="250">
+          </div>
+          <div>
+            <label for="rate">Rate (₦ per USDC)</label>
+            <input id="rate" name="rate_ngn" type="number" min="500" max="5000" step="1" required inputmode="numeric" placeholder="1605">
+          </div>
+        </div>
+        <div class="spread" style="margin-top:14px">
+          <span class="subtle">Your limit: <%= ngn(tier.limitNgn) %> per offer</span>
+          <button class="btn primary" type="submit">Post offer</button>
+        </div>
+      </form>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <h2>Your trades</h2>
+    <% if (!trades.length) { %>
+      <p class="muted" style="margin-top:8px">Trades you start or receive show up here.</p>
+    <% } else { %>
+      <ul class="offers" style="margin-top:6px">
+        <% trades.forEach(function (t) { %>
+          <li class="offer">
+            <div>
+              <div class="who-line">#<%= t.id %> · <span class="side-<%= t.side %>"><%= t.side === 'buy' ? 'Buying' : 'Selling' %></span> <%= t.amount_usdc %> USDC</div>
+              <div class="numbers"><%= ngn(t.total_ngn) %> · with <%= t.maker_id ? (t.maker_first_name || 'Kora trader') : t.demo_name %></div>
+            </div>
+            <a class="btn small" href="/trades/<%= t.id %>">
+              <%= { open: 'Open', paid: 'Paid', released: 'Done', cancelled: 'Cancelled' }[t.status] %>
+            </a>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+</div>
+
+<%- include('partials/foot') %>

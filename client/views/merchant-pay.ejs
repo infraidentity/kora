@@ -1,0 +1,52 @@
+<%- include('partials/head') %>
+
+<p><a href="/merchant">← Merchant badge</a></p>
+<div class="page-head" style="margin-top:12px">
+  <div>
+    <h1>Pay for your merchant badge</h1>
+    <p>Connect the wallet you'll pay from. INFRA checks it and gives a price for that wallet. Then your wallet signs a one-off USDC payment on Base. You only sign; you don't pay gas, and INFRA takes the payment only after your verification is ready.</p>
+  </div>
+</div>
+
+<div class="grid two">
+  <section class="card stack" id="payv" data-base-url="/merchant/pay/<%= check.id %>">
+    <% if (check.status === 'paid') { %>
+      <div class="notice ok">Paid. Your merchant badge is active.</div>
+    <% } else { %>
+      <div id="payv-status" class="notice info" role="status" aria-live="polite">Connect your wallet to see the price.</div>
+      <ol class="steps" style="margin-top:4px">
+        <li id="step-wallet" class="now">
+          <h3>Connect your wallet</h3>
+          <p class="subtle" id="wallet-line">Use the wallet you want to pay from.</p>
+          <button class="btn small" id="connect-wallet" type="button" style="margin-top:8px">Connect wallet</button>
+        </li>
+        <li id="step-link" hidden>
+          <h3>Link this wallet to your INFRA account</h3>
+          <p class="muted">Kora requires merchants to pay from their own wallet. Sign a short message (not a payment), then approve the link in the INFRA app. You haven't been asked to pay anything yet.</p>
+          <button class="btn small" id="link" type="button" style="margin-top:8px">Sign link message</button>
+        </li>
+        <li id="step-pay">
+          <h3>Sign the payment</h3>
+          <p class="muted" id="price-line">The price appears once your wallet is connected.</p>
+          <button class="btn primary small" id="pay" type="button" disabled style="margin-top:8px">Sign and pay</button>
+        </li>
+      </ol>
+    <% } %>
+  </section>
+
+  <section class="card stack">
+    <h2>Before you sign</h2>
+    <dl class="facts">
+      <dt>Amount</dt><dd id="fact-amount">—</dd>
+      <dt>Network</dt><dd id="fact-network">—</dd>
+      <dt>Paid to</dt><dd class="mono" id="fact-payto">—</dd>
+      <dt>Kora receives</dt><dd>Your name, country and INFRA verification status</dd>
+    </dl>
+    <p class="subtle">Check the "To" address in your wallet matches <strong>Paid to</strong> above, and INFRA's published address in INFRA Accounts. Never sign a payment to any other address.</p>
+    <p class="subtle">Need test USDC on Base Sepolia? Use a faucet such as faucet.circle.com.</p>
+  </section>
+</div>
+
+<% if (check.status !== 'paid') { %><script src="/payv.js"></script><% } %>
+
+<%- include('partials/foot') %>

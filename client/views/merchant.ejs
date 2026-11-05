@@ -1,0 +1,55 @@
+<%- include('partials/head') %>
+
+<div class="page-head">
+  <div>
+    <h1>Merchant badge</h1>
+    <p>Trade in volume? Get the Merchant badge on your offers. Kora reuses your INFRA verification instead of asking for documents, and you pay a small fee in USDC from your own wallet each time. No subscription.</p>
+  </div>
+</div>
+
+<% if (!configured) { %>
+  <div class="notice warn">The merchant badge isn't set up on this Kora yet. Set PAYV_CLIENT_ID and PAYV_CLIENT_SECRET (a separate INFRA app on PayV billing). See README.md.</div>
+<% } %>
+
+<div class="grid two">
+  <section class="card stack">
+    <h2>Get the badge</h2>
+    <ol class="muted" style="margin:0;padding-left:20px">
+      <li>In <a href="<%= accountsUrl %>" target="_blank" rel="noopener">INFRA Accounts</a>, tap <strong>Connect an app</strong> and make a code.</li>
+      <li>Paste it below. INFRA records that you agreed to share with Kora.</li>
+      <li>Connect your wallet. INFRA checks it and Kora shows the fee for that wallet.</li>
+      <li>Your wallet signs a USDC payment on Base. Nothing moves until INFRA has your verification ready.</li>
+    </ol>
+    <form method="post" action="/merchant/start" class="row">
+      <input name="code" placeholder="CNX-AB12-CD34" autocomplete="off" autocapitalize="characters" aria-label="INFRA Connect code" required style="flex:1;min-width:180px" <%= configured ? '' : 'disabled' %>>
+      <button class="btn primary" type="submit" <%= configured ? '' : 'disabled' %>>Continue</button>
+    </form>
+    <p class="subtle">Becoming verified on INFRA is always free. The fee is only for Kora reusing a verification you already have. Test mode uses an INFRA sandbox user and test USDC on Base Sepolia.</p>
+  </section>
+
+  <section class="card">
+    <h2>Your merchant checks</h2>
+    <% if (!checks.length) { %>
+      <p class="muted" style="margin-top:8px">Nothing yet.</p>
+    <% } else { %>
+      <ul class="offers" style="margin-top:6px">
+        <% checks.forEach(function (c) { %>
+          <li class="offer">
+            <div>
+              <div class="who-line">
+                <%= c.status === 'paid' ? ([c.first_name, c.last_name].filter(Boolean).join(' ') || 'Verified merchant') : (c.amount_display ? c.amount_display + ' ' + c.asset_symbol : 'Waiting for your wallet') %>
+                <% if (c.status === 'paid') { %><span class="pill ok">Badge active</span><% } else { %><span class="pill warn">Not paid</span><% } %>
+              </div>
+              <div class="numbers">
+                <% if (c.tx_hash) { %><span class="mono"><%= c.tx_hash.slice(0, 10) %>…<%= c.tx_hash.slice(-6) %></span><% } else if (c.failure) { %>Last attempt: <%= c.failure.replace(/_/g, ' ').toLowerCase() %><% } %>
+              </div>
+            </div>
+            <% if (c.status !== 'paid') { %><a class="btn small" href="/merchant/pay/<%= c.id %>">Continue</a><% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+</div>
+
+<%- include('partials/foot') %>

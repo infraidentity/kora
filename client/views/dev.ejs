@@ -1,0 +1,84 @@
+<%- include('partials/head') %>
+
+<div class="page-head">
+  <div>
+    <h1>Developer panel</h1>
+    <p>What Kora sent to INFRA and what INFRA sent back. User ids are hidden in paths.</p>
+  </div>
+</div>
+
+<section class="card stack">
+  <h2>Setup</h2>
+  <dl class="facts">
+    <dt>INFRA API</dt><dd class="mono"><%= setup.apiBase %></dd>
+    <dt>Main app (sign-in, Connect)</dt><dd><%- setup.main ? '<span class="pill ok">Configured</span>' : '<span class="pill bad">CLIENT_ID / CLIENT_SECRET missing</span>' %></dd>
+    <dt>Merchant app (PayV)</dt><dd><%- setup.payv ? '<span class="pill ok">Configured</span>' : '<span class="pill warn">PAYV_CLIENT_ID / PAYV_CLIENT_SECRET missing</span>' %></dd>
+    <dt>Webhook secret</dt><dd><%- setup.webhook ? '<span class="pill ok">Set</span>' : '<span class="pill bad">WEBHOOK_SECRET missing: every webhook will be rejected</span>' %></dd>
+    <dt>Redirect URI</dt><dd class="mono"><%= setup.redirectUri %></dd>
+    <dt>Scopes</dt><dd class="mono"><%= setup.scopes %></dd>
+    <dt>Webhook URL</dt><dd class="mono"><%= setup.webhookUrl %></dd>
+    <dt>Deletion callback URL</dt><dd class="mono"><%= setup.deletionUrl %></dd>
+  </dl>
+  <p class="subtle">Register the redirect URI, webhook URL and deletion callback URL on the main app in the INFRA developer portal.</p>
+</section>
+
+<section class="card stack" id="signed">
+  <h2>Signed by INFRA</h2>
+  <p class="muted">What INFRA signed for the signed-in person. Copy one and check it online at <a href="/verify">/verify</a>, or yourself:
+    <span class="mono">node scripts/check-credential.js &lt;credential&gt;</span> or
+    <span class="mono">node scripts/check-connect-result.js &lt;signed result&gt;</span> (from the testapp folder).</p>
+  <% if (!signed) { %>
+    <p class="muted">Sign in to Kora to see yours.</p>
+  <% } else { %>
+    <h3>Verified facts credential</h3>
+    <% if (signed.credential) { %>
+      <p><%- signed.credentialCheck && signed.credentialCheck.ok ? '<span class="pill ok">Kora: signature OK</span>' : '<span class="pill bad">Kora: ' + (signed.credentialCheck ? signed.credentialCheck.reason : 'not checked') + '</span>' %></p>
+      <textarea readonly rows="4" class="mono" style="width:100%" onclick="this.select()"><%= signed.credential %></textarea>
+    <% } else { %><p class="muted">None yet. It arrives with the facts (Refresh on Your details).</p><% } %>
+    <h3>Latest Connect result</h3>
+    <% if (signed.connectResult) { %>
+      <textarea readonly rows="3" class="mono" style="width:100%" onclick="this.select()"><%= signed.connectResult %></textarea>
+    <% } else { %><p class="muted">None yet. Share your verified name on a trade.</p><% } %>
+  <% } %>
+</section>
+
+<section class="card stack">
+  <h2>Webhooks received</h2>
+  <% if (!webhooks.length) { %><p class="muted">None yet.</p><% } else { %>
+    <div class="table-scroll"><table>
+      <thead><tr><th>When</th><th>Event</th><th>Signature</th><th>What Kora did</th></tr></thead>
+      <tbody>
+        <% webhooks.forEach(function (w) { %>
+          <tr>
+            <td class="subtle"><%= w.received_at %></td>
+            <td class="mono"><%= w.event_type %><%= w.kind === 'deletion' ? ' (at deletion address)' : '' %></td>
+            <td><%- w.signature_ok ? '<span class="pill ok">Valid</span>' : '<span class="pill bad">Rejected</span>' %></td>
+            <td><%= w.outcome || '—' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+  <% } %>
+</section>
+
+<section class="card stack">
+  <h2>Calls to INFRA</h2>
+  <% if (!calls.length) { %><p class="muted">None yet.</p><% } else { %>
+    <div class="table-scroll"><table>
+      <thead><tr><th>When</th><th>App</th><th>Request</th><th>Status</th><th>Time</th></tr></thead>
+      <tbody>
+        <% calls.forEach(function (c) { %>
+          <tr>
+            <td class="subtle"><%= c.created_at %></td>
+            <td><%= c.app %></td>
+            <td class="mono"><%= c.method %> <%= c.path %></td>
+            <td><span class="pill <%= !c.status ? 'bad' : c.status < 300 ? 'ok' : c.status === 402 ? 'warn' : 'bad' %>"><%= c.status || 'no reply' %></span><% if (c.code) { %> <span class="mono subtle"><%= c.code %></span><% } %></td>
+            <td class="subtle"><%= c.ms %> ms</td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table></div>
+  <% } %>
+</section>
+
+<%- include('partials/foot') %>

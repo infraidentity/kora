@@ -1,0 +1,107 @@
+<%- include('partials/head') %>
+
+<div class="page-head">
+  <div>
+    <h1>Your details</h1>
+    <p>This is everything INFRA shared with Kora when you signed in. Kora keeps it up to date and deletes it the moment you withdraw access.</p>
+  </div>
+  <form method="post" action="/refresh" class="inline"><button class="btn" type="submit">Refresh from INFRA</button></form>
+</div>
+
+<%- include('partials/tier') %>
+
+<div class="grid two" style="margin-top:16px">
+  <section class="card stack">
+    <h2>Profile</h2>
+    <dl class="facts">
+      <dt>Name</dt><dd><%= [user.first_name, user.last_name].filter(Boolean).join(' ') || '—' %></dd>
+      <dt>Email</dt><dd><%= user.email || '—' %></dd>
+      <dt>Country</dt><dd><%= user.country || '—' %></dd>
+      <dt>Phone</dt>
+      <dd>
+        <% if (user.phone && user.phone.number) { %>
+          <span class="mono"><%= user.phone.number %></span>
+          <% if (user.phone.verified) { %><span class="pill ok" style="margin-left:6px">✓ Confirmed by INFRA</span><% } else { %><span class="pill" style="margin-left:6px">Not confirmed</span><% } %>
+        <% } else { %>
+          <span class="muted">Not shared</span>
+        <% } %>
+      </dd>
+      <dt>INFRA username</dt><dd><% if (user.username) { %><% if (String(user.profile_url || '').startsWith('https://')) { %><a href="<%= user.profile_url %>" target="_blank" rel="noopener">@<%= user.username %></a><% } else { %>@<%= user.username %><% } %><% } else { %>Not set<% } %></dd>
+      <dt>Verification</dt>
+      <dd><%= user.kyc_status === 'verified' ? 'Verified' : user.kyc_status.replace(/_/g, ' ') %><%= user.kyc_level ? ' · ' + user.kyc_level.replace('level_', 'level ') : '' %></dd>
+      <% if (user.verified_at) { %><dt>Verified on</dt><dd><%= new Date(user.verified_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) %></dd><% } %>
+    </dl>
+  </section>
+
+  <section class="card stack">
+    <h2>What INFRA has confirmed</h2>
+    <% if (!user.claims.length) { %>
+      <p class="muted">Nothing yet. Confirmed facts (like "Over 18") appear here after INFRA verifies you.</p>
+    <% } else { %>
+      <div class="row">
+        <% user.claims.forEach(function (c) { %>
+          <span class="pill ok" title="<%= c.expires_at ? 'Valid until ' + new Date(c.expires_at).toLocaleDateString('en-GB') : '' %>">✓ <%= claimLabels[c.claim_type] || c.claim_type.replace(/_/g, ' ') %><%= c.value && c.value.country ? ': ' + c.value.country : '' %></span>
+        <% }) %>
+      </div>
+    <% } %>
+    <% var cc = user.credentialCheck; %>
+    <% if (cc && cc.ok) { %>
+      <p class="notice ok" style="margin:4px 0 0">Signed by INFRA ✓
+        <span class="subtle" style="display:block;font-weight:400;margin-top:2px">Kora checked these facts against INFRA's public key (<span class="mono"><%= cc.kid %></span>)<%= cc.environment === 'test' ? ' · test user' : ' · live account' %>. <%= cc.facts.length %> signed fact<%= cc.facts.length === 1 ? '' : 's' %>.</span>
+      </p>
+    <% } else if (cc) { %>
+      <p class="notice error" style="margin:4px 0 0">INFRA's signature didn't check out: <%= cc.reason %> Kora doesn't rely on these facts.</p>
+    <% } else if (user.claims.length) { %>
+      <p class="subtle">INFRA didn't send a signed copy of these facts.</p>
+    <% } %>
+    <h3 style="margin-top:8px">Documents you verified</h3>
+    <% if (!user.documents.length) { %>
+      <p class="muted">None shared.</p>
+    <% } else { %>
+      <ul style="margin:0;padding-left:20px">
+        <% user.documents.forEach(function (d) { %>
+          <li><%= String(d.document_type || 'Document').replace(/_/g, ' ') %> · <%= d.status %><%= d.expiry_date ? ', expires ' + new Date(d.expiry_date).toLocaleDateString('en-GB') : '' %></li>
+        <% }) %>
+      </ul>
+      <p class="subtle">Kora sees the type and status only, never the document.</p>
+    <% } %>
+  </section>
+</div>
+
+<section class="card stack" style="margin-top:16px" id="infra-events">
+  <h2>What INFRA told Kora</h2>
+  <p class="muted">INFRA tells Kora when something about your verification changes. Here is what it said, and what Kora did.</p>
+  <% if (!(user.alerts || []).length) { %>
+    <p class="muted">Nothing yet.</p>
+  <% } else { %>
+    <ul class="stack" style="margin:0;padding:0;list-style:none">
+      <% user.alerts.forEach(function (a) { %>
+        <li class="notice <%= a.tone === 'bad' ? 'error' : a.tone %>" style="margin:0">
+          <%= a.text %>
+          <span class="subtle" style="display:block;font-weight:400;margin-top:2px"><%= new Date(a.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) %><%= a.simulated ? ' · test event' : '' %></span>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+
+<div class="grid two" style="margin-top:16px">
+  <section class="card stack">
+    <h2>Access you gave Kora</h2>
+    <% if (scopes.length) { %>
+      <div class="row"><% scopes.forEach(function (s) { %><span class="pill mono"><%= s %></span><% }) %></div>
+    <% } %>
+    <p class="muted">To stop sharing, open INFRA Accounts → Connected apps and remove Kora. INFRA tells Kora straight away and Kora deletes your data and signs you out.</p>
+    <a class="btn" href="<%= accountsUrl %>" target="_blank" rel="noopener">Manage in INFRA Accounts</a>
+  </section>
+
+  <section class="card stack">
+    <h2>Delete your Kora data</h2>
+    <p class="muted">Removes your profile, offers, trades and checks from Kora. Your INFRA account and verification are not affected.</p>
+    <form method="post" action="/account/delete" onsubmit="return confirm('Delete everything Kora holds about you?')">
+      <button class="btn danger" type="submit">Delete my Kora data</button>
+    </form>
+  </section>
+</div>
+
+<%- include('partials/foot') %>

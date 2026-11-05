@@ -1,0 +1,12 @@
+<%- include('partials/head') %>
+
+<section class="card stack" style="max-width:560px;margin:40px auto">
+  <h1><%= typeof title !== 'undefined' ? title : 'Something went wrong' %></h1>
+  <p class="muted"><%= typeof message !== 'undefined' ? message : 'Please try again.' %></p>
+  <div class="row">
+    <% if (typeof retry !== 'undefined' && retry) { %><a class="btn primary" href="<%= retry %>">Try again</a><% } %>
+    <a class="btn" href="/">Go to Kora</a>
+  </div>
+</section>
+
+<%- include('partials/foot') %>

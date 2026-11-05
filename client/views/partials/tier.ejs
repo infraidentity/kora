@@ -1,0 +1,47 @@
+<% var tierWarnings = typeof warningsFor === 'function' ? warningsFor(user) : []; %>
+<div class="card tier" id="tier" data-tier="<%= tier.id %>" data-kyc="<%= user.kyc_status %>" data-alerts="<%= (user.alerts || []).length ? user.alerts[0].at : '' %>">
+  <div class="badge <%= tier.id === 'browse' ? 'off' : '' %>" aria-hidden="true"><%= tier.id === 'browse' ? '🔒' : tier.id === 'full' ? '★' : '✓' %></div>
+  <div>
+    <div class="row">
+      <h2><%= tier.name %></h2>
+      <% if (user.kyc_status === 'verified') { %><span class="pill ok">Verified by INFRA</span>
+      <% } else if (user.kyc_status === 'pending') { %><span class="pill warn">INFRA is checking your ID</span>
+      <% } else if (user.kyc_status === 'rejected') { %><span class="pill bad">Verification failed</span>
+      <% } else if (user.kyc_status === 'suspended') { %><span class="pill bad">Verification suspended</span>
+      <% } else if (user.kyc_status === 'expired') { %><span class="pill bad">ID expired</span>
+      <% } else { %><span class="pill">Not verified yet</span><% } %>
+    </div>
+    <p class="muted" style="margin-top:4px">
+      <% if (tier.limitNgn) { %>You can trade up to <strong><%= ngn(tier.limitNgn) %></strong> per trade.<% } else { %>You can browse offers. Trading opens once INFRA verifies you.<% } %>
+      <% if (next) { %> <%= next %><% } %>
+    </p>
+    <% tierWarnings.forEach(function (w) { %>
+      <p class="notice <%= w.tone === 'bad' ? 'error' : w.tone %>" style="margin:8px 0 0"><%= w.text %></p>
+    <% }) %>
+  </div>
+  <div class="row">
+    <% if (next) { %><a class="btn" href="<%= typeof accountsUrl !== 'undefined' ? accountsUrl : 'https://accounts.infraidentity.com' %>" target="_blank" rel="noopener">Open INFRA Accounts</a><% } %>
+    <form method="post" action="/refresh" class="inline"><button class="btn" type="submit">Refresh</button></form>
+  </div>
+</div>
+<script>
+  // INFRA webhooks can change your status while this page is open (for
+  // example, verification finishing or an ID expiring). Check every 10
+  // seconds and reload when anything INFRA sent changes what you see.
+  (function () {
+    var el = document.getElementById('tier');
+    if (!el) return;
+    setInterval(function () {
+      fetch('/status.json', { credentials: 'same-origin' })
+        .then(function (r) {
+          // 401: INFRA told Kora to forget you (access withdrawn); show the signed-out page.
+          if (r.status === 401) location.reload();
+          return r.ok ? r.json() : null;
+        })
+        .then(function (s) {
+          if (s && (s.tier !== el.dataset.tier || s.kyc_status !== el.dataset.kyc || (s.last_alert || '') !== el.dataset.alerts)) location.reload();
+        })
+        .catch(function () {});
+    }, 10000);
+  })();
+</script>

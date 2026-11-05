@@ -1,0 +1,70 @@
+<%- include('partials/head') %>
+
+<div class="page-head">
+  <div>
+    <h1>Check an INFRA signature</h1>
+    <p>Paste something INFRA signed and see whether it checks out against INFRA's public key. Nothing you paste is stored.</p>
+  </div>
+</div>
+
+<div class="grid two">
+  <section class="card stack">
+    <form method="post" action="/verify" class="stack">
+      <label for="signed"><strong>Verified facts credential or Connect result</strong></label>
+      <textarea id="signed" name="signed" rows="8" class="mono" style="width:100%" placeholder="eyJhbGciOiJFUzI1NiIs…~WyJ…~" required><%= input %></textarea>
+      <label for="client_id"><strong>Must be issued to (client ID)</strong></label>
+      <input id="client_id" name="client_id" value="<%= clientId %>" placeholder="infra_live_… or infra_test_… (empty: any app)" autocomplete="off">
+      <label class="row" style="gap:8px;align-items:center">
+        <input type="checkbox" name="live" value="1" <%= live ? 'checked' : '' %> style="width:auto">
+        Only accept live verified accounts (refuse test users)
+      </label>
+      <button class="btn primary" type="submit">Check</button>
+    </form>
+    <p class="subtle">Public keys: <a class="mono" href="<%= jwksUrl %>" target="_blank" rel="noopener"><%= jwksUrl %></a>.
+      Copy yours from the developer panel (/dev → Signed by INFRA). The same check runs from the command line:
+      <span class="mono">npm run check:credential</span>.</p>
+  </section>
+
+  <section class="card stack" aria-live="polite">
+    <h2>Result</h2>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <p class="notice error"><%= error %></p>
+    <% } else if (!result) { %>
+      <p class="muted">Paste something on the left and press Check.</p>
+    <% } else { %>
+      <p class="notice <%= result.ok ? 'ok' : 'error' %>" style="margin:0">
+        <%= result.ok ? 'VALID: signed by INFRA' + (result.kid ? ' (key ' + result.kid + ')' : '') : 'NOT VALID: ' + result.reason %>
+      </p>
+      <p class="subtle"><%= kind === 'credential' ? 'Checked as a verified facts credential.' : 'Checked as a Connect result.' %></p>
+      <ul style="margin:0;padding-left:0;list-style:none" class="stack">
+        <% (result.steps || []).forEach(function (s) { %>
+          <li><span class="pill <%= s.ok ? 'ok' : 'bad' %>"><%= s.ok ? '✓' : '✗' %></span> <%= s.name %><% if (s.detail) { %> <span class="subtle">(<%= s.detail %>)</span><% } %></li>
+        <% }) %>
+      </ul>
+      <% if (result.ok && kind === 'credential') { %>
+        <dl class="facts">
+          <dt>Account</dt><dd><%= result.environment === 'live' ? 'Live' : 'Test user' %></dd>
+          <dt>Person (app's id)</dt><dd class="mono"><%= result.subject %></dd>
+          <dt>Issued to</dt><dd class="mono"><%= result.audience %></dd>
+          <dt>Expires</dt><dd><%= result.expiresAt %></dd>
+        </dl>
+        <h3>Signed facts</h3>
+        <ul style="margin:0;padding-left:20px">
+          <% result.facts.forEach(function (f) { %>
+            <li><span class="mono"><%= f.name %></span><%= f.value ? ' = ' + JSON.stringify(f.value) : '' %> <span class="subtle">(<%= f.provider || 'infra' %><%= f.issued_at ? ', since ' + f.issued_at.slice(0, 10) : '' %>)</span></li>
+          <% }) %>
+        </ul>
+      <% } else if (result.ok) { %>
+        <% var p = (result.data && result.data.profile) || {}; var k = (result.data && result.data.kyc) || {}; %>
+        <dl class="facts">
+          <dt>Shared name</dt><dd><%= [p.first_name, p.last_name].filter(Boolean).join(' ') || '—' %></dd>
+          <dt>Status</dt><dd><%= k.status || '—' %><%= k.kyc_level ? ' · ' + k.kyc_level : '' %></dd>
+          <dt>Person (app's id)</dt><dd class="mono"><%= result.subject %></dd>
+          <dt>Request</dt><dd class="mono"><%= result.requestId %></dd>
+        </dl>
+      <% } %>
+    <% } %>
+  </section>
+</div>
+
+<%- include('partials/foot') %>

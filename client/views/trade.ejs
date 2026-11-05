@@ -1,0 +1,134 @@
+<%- include('partials/head') %>
+<%
+  const order = ['open', 'paid', 'released'];
+  const at = order.indexOf(trade.status);
+  const stepClass = (i) => trade.status === 'cancelled' ? '' : (i < at || trade.status === 'released' ? 'done' : i === at ? 'now' : '');
+  const buyerName = iAmBuyer ? 'You' : counterpart;
+  const sellerName = iAmSeller ? 'You' : counterpart;
+  const fullName = (v) => v ? ([v.first_name, v.last_name].filter(Boolean).join(' ') || '—') : null;
+  const levelText = (v) => v && v.kyc_level ? ' · ' + v.kyc_level.replace('level_', 'level ') : '';
+%>
+
+<p><a href="/market">← Market</a></p>
+<div class="page-head" style="margin-top:12px">
+  <div>
+    <div class="row">
+      <h1>Trade #<%= trade.id %></h1>
+      <span class="pill <%= trade.status === 'released' ? 'ok' : trade.status === 'cancelled' ? 'bad' : 'warn' %>">
+        <%= { open: 'Waiting for payment', paid: 'Waiting for release', released: 'Complete', cancelled: 'Cancelled' }[trade.status] %>
+      </span>
+    </div>
+    <p><%= iAmTaker ? (trade.side === 'buy' ? 'You are buying' : 'You are selling') : (trade.side === 'buy' ? 'You are selling' : 'You are buying') %>
+      <strong><%= trade.amount_usdc %> USDC</strong> for <strong><%= ngn(trade.total_ngn) %></strong> with <%= counterpart %>.</p>
+  </div>
+</div>
+
+<div class="grid two">
+  <section class="card">
+    <h2>Steps</h2>
+    <ol class="steps" style="margin-top:16px">
+      <li class="<%= stepClass(0) %>">
+        <h3><%= buyerName %> <%= iAmBuyer ? 'send' : 'sends' %> <%= ngn(trade.total_ngn) %></h3>
+        <p class="muted">By bank transfer to <%= iAmBuyer ? counterpart : 'you' %>, into an account in <%= iAmBuyer ? 'their' : 'your' %> verified name.</p>
+        <% if (trade.status === 'open' && !bothShared) { %>
+          <p class="subtle" style="margin-top:6px">Waiting for both verified names (see the right).</p>
+        <% } %>
+        <% if (trade.status === 'open') { %>
+          <div class="row" style="margin-top:10px">
+            <% if (iAmBuyer) { %>
+              <form method="post" action="/trades/<%= trade.id %>/paid" class="inline"><button class="btn primary small" type="submit" <%= bothShared ? '' : 'disabled' %>>I've sent the money</button></form>
+            <% } else if (demo) { %>
+              <form method="post" action="/trades/<%= trade.id %>/paid" class="inline"><input type="hidden" name="as_demo" value="1"><button class="btn small" type="submit" <%= bothShared ? '' : 'disabled' %>>Simulate: demo trader pays</button></form>
+            <% } %>
+            <form method="post" action="/trades/<%= trade.id %>/cancel" class="inline"><button class="btn small danger" type="submit">Cancel trade</button></form>
+          </div>
+        <% } %>
+      </li>
+      <li class="<%= stepClass(1) %>">
+        <h3><%= sellerName %> <%= iAmSeller ? 'release' : 'releases' %> <%= trade.amount_usdc %> USDC</h3>
+        <p class="muted">Only after the naira has arrived.</p>
+        <% if (trade.status === 'paid') { %>
+          <div class="row" style="margin-top:10px">
+            <% if (iAmSeller) { %>
+              <form method="post" action="/trades/<%= trade.id %>/release" class="inline"><button class="btn primary small" type="submit">Naira received, release USDC</button></form>
+            <% } else if (demo) { %>
+              <form method="post" action="/trades/<%= trade.id %>/release" class="inline"><input type="hidden" name="as_demo" value="1"><button class="btn small" type="submit">Simulate: demo trader releases</button></form>
+            <% } %>
+          </div>
+        <% } %>
+      </li>
+      <li class="<%= stepClass(2) %>">
+        <h3>Done</h3>
+        <p class="muted">The trade is recorded with both traders' INFRA status.</p>
+      </li>
+    </ol>
+  </section>
+
+  <div>
+    <section class="card stack" id="verified-names">
+      <h2>Verified names on this trade</h2>
+      <p class="muted">Before any money moves, both traders share their verified name from INFRA. Kora shows each side the other's.</p>
+
+      <h3><%= iAmSeller ? 'You (seller)' : 'You (buyer)' %></h3>
+      <% if (mine) { %>
+        <dl class="facts">
+          <dt>Verified name</dt><dd><%= fullName(mine) %></dd>
+          <dt>INFRA status</dt><dd><% if (mine.kyc_status === 'verified') { %><span class="pill ok">Verified<%= levelText(mine) %></span><% } else { %><span class="pill bad">Not verified</span><% } %></dd>
+        </dl>
+        <p class="subtle">Shown to <%= counterpart %>. Shared with INFRA Connect<%= mine.signed ? ' and signed by INFRA' : '' %>.</p>
+      <% } else if (trade.status === 'open') { %>
+        <p class="muted">Share your verified name with <%= counterpart %>: open INFRA Accounts, tap <strong>Connect an app</strong>, and paste the code here. It works once and lasts 10 minutes.</p>
+        <form method="post" action="/trades/<%= trade.id %>/identity" class="row">
+          <input name="code" placeholder="CNX-AB12-CD34" autocomplete="off" autocapitalize="characters" aria-label="Your INFRA Connect code" style="flex:1;min-width:160px">
+          <button class="btn primary" type="submit">Share</button>
+        </form>
+        <a class="btn small" href="<%= accountsUrl %>" target="_blank" rel="noopener">Open INFRA Accounts</a>
+      <% } else { %>
+        <p class="muted">Not shared.</p>
+      <% } %>
+
+      <h3 style="margin-top:8px"><%= counterpart %> (<%= iAmSeller ? 'buyer' : 'seller' %>)</h3>
+      <% if (theirs) { %>
+        <dl class="facts">
+          <dt>Verified name</dt><dd><%= fullName(theirs) %><%= theirs.sample ? ' (sample)' : '' %></dd>
+          <dt>INFRA status</dt><dd><% if (theirs.kyc_status === 'verified') { %><span class="pill ok">Verified<%= levelText(theirs) %><%= theirs.sample ? ' · sample' : '' %></span><% } else { %><span class="pill bad">Not verified</span><% } %></dd>
+          <% if (theirs.country) { %><dt>Country</dt><dd><%= theirs.country %></dd><% } %>
+        </dl>
+        <% if (theirs.sample) { %>
+          <p class="subtle">Demo traders can't share a Connect code, so Kora shows a sample. With a real trader (for example a second test user in another browser), their own verified name appears here.</p>
+        <% } else { %>
+          <p class="subtle"><%= iAmBuyer ? 'Only pay into a bank account in this name.' : 'Only release once naira arrives from an account in this name.' %> Shared with INFRA Connect<%= theirs.signed ? ' and signed by INFRA' : '' %>.</p>
+        <% } %>
+      <% } else { %>
+        <p class="muted">Waiting for <%= counterpart %> to share their verified name. This page updates when they do.</p>
+      <% } %>
+    </section>
+
+    <section class="card stack">
+      <h2>INFRA proof</h2>
+      <% if (trade.taker_proof_hash) { %>
+        <p class="muted"><%= iAmTaker ? 'Your' : (trade.taker_first_name || 'Their') + "'s" %> INFRA verification was stamped on this trade when it opened. Anyone can ask INFRA whether it is still valid.</p>
+        <p class="mono subtle" style="overflow-wrap:anywhere"><%= trade.taker_proof_hash %></p>
+        <form method="post" action="/trades/<%= trade.id %>/check-proof"><button class="btn small" type="submit">Check with INFRA</button></form>
+      <% } else { %>
+        <p class="muted">No INFRA proof was available when this trade opened. Proofs appear once INFRA issues a "Government ID verified" claim.</p>
+      <% } %>
+    </section>
+  </div>
+</div>
+
+<script>
+  // The other trader may share their name, pay or release while this page is
+  // open: check every 8 seconds and reload when the trade changes.
+  (function () {
+    var state = <%- JSON.stringify([trade.status, trade.taker_check_id || '', trade.maker_check_id || ''].join(':')) %>;
+    setInterval(function () {
+      fetch('/trades/<%= trade.id %>/state.json', { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (s) { if (s && s.state !== state) location.reload(); })
+        .catch(function () {});
+    }, 8000);
+  })();
+</script>
+
+<%- include('partials/foot') %>
