@@ -1,10 +1,13 @@
 <%- include('partials/head') %>
 <%
+  sells = sells.slice().sort(function (a, b) { return a.rate_ngn - b.rate_ngn; });
+  buys = buys.slice().sort(function (a, b) { return b.rate_ngn - a.rate_ngn; });
   var bestBuy = sells.length ? Math.min.apply(null, sells.map(function (o) { return o.rate_ngn; })) : null;
   var bestSell = buys.length ? Math.max.apply(null, buys.map(function (o) { return o.rate_ngn; })) : null;
   var people = {};
   sells.concat(buys).forEach(function (o) { if (o.verified) people[o.name] = 1; });
   var verifiedCount = Object.keys(people).length;
+  var gap = bestBuy && bestSell ? bestBuy - bestSell : null;
 %>
 
 <div class="page-head">
@@ -25,6 +28,11 @@
     <span class="stat-label"><%- icon('arrow-up-right') %> Best price to sell</span>
     <span class="stat-value"><%= bestSell ? ngn(bestSell) : '—' %></span>
     <span class="subtle">per USDC</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label"><%- icon('spark') %> Price gap</span>
+    <span class="stat-value"><%= gap !== null ? ngn(Math.abs(gap)) : '—' %></span>
+    <span class="subtle">between best buy and sell</span>
   </div>
   <div class="stat">
     <span class="stat-label"><%- icon('users') %> Verified traders</span>
@@ -49,7 +57,9 @@
         <div class="empty"><%- icon('inbox') %><p>No offers yet.</p></div>
       <% } else { %>
         <ul class="offers">
-          <% col[3].forEach(function (o) { var tn = traderName(o.name); %>
+          <% col[3].forEach(function (o, idx) { var tn = traderName(o.name);
+               var maxUsdc = tier.limitNgn ? Math.floor(tier.limitNgn / o.rate_ngn) : 0;
+               var overLimit = tier.limitNgn && !o.mine && o.amount_usdc > maxUsdc; %>
             <li class="offer" title="<%= o.name %>">
               <span class="avatar hue-<%= hue(o.name) %>" aria-hidden="true"><%= initials(o.name) %></span>
               <div>
@@ -59,8 +69,9 @@
                   <% if (o.verified) { %><span class="pill infra"><%- infraMark() %> Verified</span><% } else { %><span class="pill">Unverified</span><% } %>
                   <% if (o.merchant_name) { %><span class="pill brand" title="PayV merchant check: <%= o.merchant_name %>"><%- icon('badge') %> Merchant</span><% } %>
                   <% if (o.mine) { %><span class="pill">Yours</span><% } %>
+                  <% if (idx === 0 && col[3].length > 1) { %><span class="pill best"><%- icon('star') %> Best price</span><% } %>
                 </div>
-                <div class="numbers">Up to <strong><%= o.amount_usdc.toLocaleString('en-NG') %> USDC</strong></div>
+                <div class="numbers">Up to <strong><%= o.amount_usdc.toLocaleString('en-NG') %> USDC</strong><% if (overLimit) { %> <span class="subtle">· you can take up to <%= maxUsdc.toLocaleString('en-NG') %></span><% } %></div>
               </div>
               <div class="offer-end">
                 <span class="rate"><%= ngn(o.rate_ngn) %><small>per USDC</small></span>
@@ -106,7 +117,7 @@
           </div>
         </div>
         <div class="spread" style="margin-top:14px">
-          <span class="subtle">Your limit: <%= ngn(tier.limitNgn) %> per offer</span>
+          <span class="subtle" id="offer-total" data-limit="<%= tier.limitNgn %>">Your limit: <%= ngn(tier.limitNgn) %> per offer</span>
           <button class="btn primary" type="submit"><%- icon('plus') %> Post offer</button>
         </div>
       </form>
@@ -139,5 +150,24 @@
     <% } %>
   </section>
 </div>
+
+<script>
+  // While posting: show the offer's total in naira, and warn above the limit.
+  (function () {
+    var out = document.getElementById('offer-total');
+    var a = document.getElementById('amount'), r = document.getElementById('rate');
+    if (!out || !a || !r) return;
+    var limit = Number(out.dataset.limit), base = out.textContent;
+    function naira(n) { return '₦' + Math.round(n).toLocaleString('en-NG'); }
+    function show() {
+      var total = Number(a.value) * Number(r.value);
+      if (!(total > 0)) { out.textContent = base; out.className = 'subtle'; return; }
+      var over = total > limit;
+      out.textContent = 'Total ' + naira(total) + (over ? ' · above your ' + naira(limit) + ' limit' : '');
+      out.className = over ? 'subtle over' : 'subtle';
+    }
+    a.addEventListener('input', show); r.addEventListener('input', show);
+  })();
+</script>
 
 <%- include('partials/foot') %>

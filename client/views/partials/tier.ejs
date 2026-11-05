@@ -15,6 +15,12 @@
       <% if (tier.limitNgn) { %>You can trade up to <strong><%= ngn(tier.limitNgn) %></strong> per trade.<% } else { %>You can browse offers. Trading opens once INFRA verifies you.<% } %>
       <% if (next) { %> <%= next %><% } %>
     </p>
+    <ol class="ladder" aria-label="Trading levels">
+      <% [['browse', 'Browse', 'View offers'], ['starter', 'Starter', 'Up to ₦500,000'], ['full', 'Full', 'Up to ₦5,000,000']].forEach(function (s, i, all) {
+           var at = all.map(function (x) { return x[0]; }).indexOf(tier.id); %>
+        <li class="<%= i < at ? 'done' : i === at ? 'now' : '' %>"><strong><%= s[1] %></strong><span><%= s[2] %></span></li>
+      <% }) %>
+    </ol>
     <% tierWarnings.forEach(function (w) { %>
       <p class="notice <%= w.tone === 'bad' ? 'error' : w.tone %>" style="margin:8px 0 0"><%= w.text %></p>
     <% }) %>
