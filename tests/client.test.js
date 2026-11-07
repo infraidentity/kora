@@ -59,7 +59,7 @@ describe('verifying signed Connect results', () => {
   afterAll(() => { config.apiBase = saved; server.close(); });
 
   const sign = (privateKey, { aud = 'kora-main', typ = 'infra-connect+jwt' } = {}) =>
-    new SignJWT({ data: { profile: { first_name: 'Musa' } } })
+    new SignJWT({ data: { profile: { first_name: 'Sam' } } })
       .setProtectedHeader({ alg: 'ES256', typ, kid: 'k1' })
       .setIssuer('https://api.infraidentity.com').setSubject('u1').setAudience(aud).setJti('req_1')
       .setIssuedAt().setExpirationTime('1h')
@@ -67,7 +67,7 @@ describe('verifying signed Connect results', () => {
 
   test('a genuine result for Kora verifies against INFRA’s published keys', async () => {
     const payload = await createInfraClient().verifyConnectResult(await sign(key.privateKey));
-    expect(payload).toMatchObject({ sub: 'u1', jti: 'req_1', data: { profile: { first_name: 'Musa' } } });
+    expect(payload).toMatchObject({ sub: 'u1', jti: 'req_1', data: { profile: { first_name: 'Sam' } } });
   });
 
   test('a result signed by someone else, or for another app, is refused', async () => {

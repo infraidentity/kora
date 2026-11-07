@@ -12,11 +12,11 @@
       <% } else { %><span class="pill">Not verified yet</span><% } %>
     </div>
     <p class="muted" style="margin-top:4px">
-      <% if (tier.limitNgn) { %>You can trade up to <strong><%= ngn(tier.limitNgn) %></strong> per trade.<% } else { %>You can browse offers. Trading opens once INFRA verifies you.<% } %>
+      <% if (tier.limitUsd) { %>You can trade up to <strong><%= usd(tier.limitUsd) %></strong> per trade.<% } else { %>You can browse offers. Trading opens once INFRA verifies you.<% } %>
       <% if (next) { %> <%= next %><% } %>
     </p>
     <ol class="ladder" aria-label="Trading levels">
-      <% [['browse', 'Browse', 'View offers'], ['starter', 'Starter', 'Up to ₦500,000'], ['full', 'Full', 'Up to ₦5,000,000']].forEach(function (s, i, all) {
+      <% [['browse', 'Browse', 'View offers'], ['starter', 'Starter', 'Up to $500'], ['full', 'Full', 'Up to $5,000']].forEach(function (s, i, all) {
            var at = all.map(function (x) { return x[0]; }).indexOf(tier.id); %>
         <li class="<%= i < at ? 'done' : i === at ? 'now' : '' %>"><strong><%= s[1] %></strong><span><%= s[2] %></span></li>
       <% }) %>

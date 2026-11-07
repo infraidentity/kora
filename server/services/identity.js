@@ -3,8 +3,8 @@
  * Kora follows from it:
  *
  *   Browse     not verified yet            view offers only
- *   Starter    INFRA-verified (level 1)    trades up to ₦500,000
- *   Full       level 2, or level 1 plus    trades up to ₦5,000,000
+ *   Starter    INFRA-verified (level 1)    trades up to $500
+ *   Full       level 2, or level 1 plus    trades up to $5,000
  *              an address claim — and
  *              always an over-18 claim
  *
@@ -16,9 +16,9 @@
 const LEVEL_RANK = { level_0: 0, level_1: 1, level_2: 2 };
 
 const TIERS = {
-  browse: { id: 'browse', name: 'Browse', limitNgn: 0 },
-  starter: { id: 'starter', name: 'Starter', limitNgn: 500_000 },
-  full: { id: 'full', name: 'Full', limitNgn: 5_000_000 },
+  browse: { id: 'browse', name: 'Browse', limitUsd: 0 },
+  starter: { id: 'starter', name: 'Starter', limitUsd: 500 },
+  full: { id: 'full', name: 'Full', limitUsd: 5_000 },
 };
 
 const CLAIM_LABELS = {
@@ -73,7 +73,7 @@ function nextStep(user) {
   if (flagsOf(user).address_stale) missing.push('refresh your address');
   else if ((LEVEL_RANK[user.kyc_level] || 0) < 2 && !hasClaim(user, 'address_verified')) missing.push('verify your address');
   if (!hasClaim(user, 'age_over_18')) missing.push('confirm you are over 18');
-  return `To trade up to ₦5,000,000, ${missing.join(' and ')} in INFRA Accounts.`;
+  return `To trade up to $5,000, ${missing.join(' and ')} in INFRA Accounts.`;
 }
 
 const fmtDate = (d) => {

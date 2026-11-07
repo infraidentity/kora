@@ -7,15 +7,15 @@
     <span class="avatar lg hue-<%= hue(offer.name) %>" aria-hidden="true"><%= initials(offer.name) %></span>
     <div>
       <h1><%= takerBuys ? 'Buy' : 'Sell' %> USDC <%= takerBuys ? 'from' : 'to' %> <%= offer.name %></h1>
-      <p><span class="rate-inline"><%= ngn(offer.rate_ngn) %></span> per USDC · up to <%= offer.amount_usdc.toLocaleString('en-NG') %> USDC available</p>
+      <p><span class="rate-inline"><%= price(offer.rate_usd) %></span> per USDC · up to <%= offer.amount_usdc.toLocaleString('en-US') %> USDC available</p>
     </div>
   </div>
 </div>
 
 <div class="grid two">
   <section class="card">
-    <div class="card-head"><span class="card-icon <%= takerBuys ? 'buy-tone' : 'sell-tone' %>"><%- icon(takerBuys ? 'arrow-down-left' : 'arrow-up-right') %></span><div><h2>Start a trade</h2><span class="subtle">Your limit: <%= tier.limitNgn ? ngn(tier.limitNgn) : 'not verified yet' %> per trade</span></div></div>
-    <% if (!tier.limitNgn) { %>
+    <div class="card-head"><span class="card-icon <%= takerBuys ? 'buy-tone' : 'sell-tone' %>"><%- icon(takerBuys ? 'arrow-down-left' : 'arrow-up-right') %></span><div><h2>Start a trade</h2><span class="subtle">Your limit: <%= tier.limitUsd ? usd(tier.limitUsd) : 'not verified yet' %> per trade</span></div></div>
+    <% if (!tier.limitUsd) { %>
       <p class="muted" style="margin-top:8px">Trading opens once INFRA verifies you. <%= next %></p>
     <% } else { %>
       <form method="post" action="/offers/<%= offer.id %>/trade" style="margin-top:14px" id="trade-form">
@@ -23,19 +23,20 @@
           <label for="amount">How much USDC?</label>
           <input id="amount" name="amount_usdc" type="number" min="1" max="<%= offer.amount_usdc %>" step="0.01" required inputmode="decimal" placeholder="100">
         </div>
-        <p class="muted" style="margin-top:10px" id="total">You <%= takerBuys ? 'pay' : 'receive' %> — in naira.</p>
-        <p class="subtle" style="margin-top:4px">Your limit is <%= ngn(tier.limitNgn) %> per trade.</p>
+        <p class="muted" style="margin-top:10px" id="total">You <%= takerBuys ? 'pay' : 'receive' %> — in dollars.</p>
+        <p class="subtle" style="margin-top:4px">Your limit is <%= usd(tier.limitUsd) %> per trade.</p>
         <button class="btn primary block" type="submit" style="margin-top:14px"><%= takerBuys ? 'Buy' : 'Sell' %> USDC</button>
       </form>
       <script>
         (function () {
-          var rate = <%= JSON.stringify(offer.rate_ngn) %>;
+          var rate = <%= JSON.stringify(offer.rate_usd) %>;
           var input = document.getElementById('amount');
           var out = document.getElementById('total');
           var verb = <%- JSON.stringify(takerBuys ? 'pay' : 'receive') %>;
           input.addEventListener('input', function () {
             var n = Number(input.value) * rate;
-            out.textContent = n > 0 ? 'You ' + verb + ' ₦' + Math.round(n).toLocaleString('en-NG') + '.' : 'You ' + verb + ' — in naira.';
+            var cents = Math.round(n * 100) / 100;
+            out.textContent = n > 0 ? 'You ' + verb + ' $' + cents.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(cents) ? 0 : 2, maximumFractionDigits: 2 }) + '.' : 'You ' + verb + ' — in dollars.';
           });
         })();
       </script>

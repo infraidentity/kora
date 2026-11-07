@@ -27,7 +27,7 @@ describe('tierFor', () => {
   });
 
   test('level 1 verified is Starter', () => {
-    expect(tierFor({ kyc_status: 'verified', kyc_level: 'level_1', claims: [] })).toMatchObject({ id: 'starter', limitNgn: 500000 });
+    expect(tierFor({ kyc_status: 'verified', kyc_level: 'level_1', claims: [] })).toMatchObject({ id: 'starter', limitUsd: 500 });
   });
 
   test('level 1 + address + over 18 is Full', () => {
@@ -42,7 +42,7 @@ describe('tierFor', () => {
 
 describe('nextStep', () => {
   test('says what is missing for Full', () => {
-    expect(nextStep({ kyc_status: 'verified', kyc_level: 'level_1', claims: [] })).toBe('To trade up to ₦5,000,000, verify your address and confirm you are over 18 in INFRA Accounts.');
+    expect(nextStep({ kyc_status: 'verified', kyc_level: 'level_1', claims: [] })).toBe('To trade up to $5,000, verify your address and confirm you are over 18 in INFRA Accounts.');
   });
   test('nothing to do at Full', () => {
     expect(nextStep({ kyc_status: 'verified', kyc_level: 'level_2', claims: [claim('age_over_18')] })).toBeNull();

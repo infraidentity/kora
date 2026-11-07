@@ -51,7 +51,7 @@ function infraMark(on = 'auto', cls = '') {
   return `<picture class="${c}"><source srcset="/infra-mark-light.png" media="(prefers-color-scheme: dark)"><img src="/infra-mark.png" alt="" aria-hidden="true"></picture>`;
 }
 
-// "Demo trader · Tunde" → { first: 'Tunde', demo: true }
+// "Demo trader · Lena" → { first: 'Lena', demo: true }
 function traderName(name) {
   const s = String(name || '').trim();
   const m = s.match(/^Demo trader\s*·\s*(.+)$/);

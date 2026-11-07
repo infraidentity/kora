@@ -1,4 +1,5 @@
 const path = require('path');
+const { usd, price } = require('./utils/money');
 const express = require('express');
 const session = require('express-session');
 const config = require('./config');
@@ -10,7 +11,7 @@ const { warnings } = require('./services/identity');
 const viewIcons = require('./services/icons');
 
 /**
- * Kora — a peer-to-peer USDC ↔ naira marketplace built on INFRA.
+ * Kora — a peer-to-peer USDC ↔ US dollar marketplace built on INFRA.
  * createApp takes the INFRA client so tests can swap in a fake one.
  */
 function parseCookies(req, res, next) {
@@ -73,7 +74,8 @@ function createApp({ infra } = {}) {
   app.use(sameOrigin);
   app.use((req, res, next) => {
     res.locals.accountsUrl = config.accountsUrl;
-    res.locals.ngn = (n) => '₦' + Math.round(n).toLocaleString('en-NG');
+    res.locals.usd = usd;
+    res.locals.price = price;
     res.locals.warningsFor = warnings;
     Object.assign(res.locals, viewIcons);
     res.locals.cssVersion = cssVersion;

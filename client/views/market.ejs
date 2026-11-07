@@ -1,9 +1,9 @@
 <%- include('partials/head') %>
 <%
-  sells = sells.slice().sort(function (a, b) { return a.rate_ngn - b.rate_ngn; });
-  buys = buys.slice().sort(function (a, b) { return b.rate_ngn - a.rate_ngn; });
-  var bestBuy = sells.length ? Math.min.apply(null, sells.map(function (o) { return o.rate_ngn; })) : null;
-  var bestSell = buys.length ? Math.max.apply(null, buys.map(function (o) { return o.rate_ngn; })) : null;
+  sells = sells.slice().sort(function (a, b) { return a.rate_usd - b.rate_usd; });
+  buys = buys.slice().sort(function (a, b) { return b.rate_usd - a.rate_usd; });
+  var bestBuy = sells.length ? Math.min.apply(null, sells.map(function (o) { return o.rate_usd; })) : null;
+  var bestSell = buys.length ? Math.max.apply(null, buys.map(function (o) { return o.rate_usd; })) : null;
   var people = {};
   sells.concat(buys).forEach(function (o) { if (o.verified) people[o.name] = 1; });
   var verifiedCount = Object.keys(people).length;
@@ -13,7 +13,7 @@
 <div class="page-head">
   <div>
     <span class="eyebrow"><%- icon('market') %> Market</span>
-    <h1>Buy and sell USDC for naira</h1>
+    <h1>Buy and sell USDC for US dollars</h1>
     <p>Every trader here has verified their identity with INFRA. Pick an offer to start a trade.</p>
   </div>
 </div>
@@ -21,17 +21,17 @@
 <div class="stats">
   <div class="stat">
     <span class="stat-label"><%- icon('arrow-down-left') %> Best price to buy</span>
-    <span class="stat-value"><%= bestBuy ? ngn(bestBuy) : '—' %></span>
+    <span class="stat-value"><%= bestBuy ? price(bestBuy) : '—' %></span>
     <span class="subtle">per USDC</span>
   </div>
   <div class="stat">
     <span class="stat-label"><%- icon('arrow-up-right') %> Best price to sell</span>
-    <span class="stat-value"><%= bestSell ? ngn(bestSell) : '—' %></span>
+    <span class="stat-value"><%= bestSell ? price(bestSell) : '—' %></span>
     <span class="subtle">per USDC</span>
   </div>
   <div class="stat">
     <span class="stat-label"><%- icon('spark') %> Price gap</span>
-    <span class="stat-value"><%= gap !== null ? ngn(Math.abs(gap)) : '—' %></span>
+    <span class="stat-value"><%= gap !== null ? price(Math.abs(gap)) : '—' %></span>
     <span class="subtle">between best buy and sell</span>
   </div>
   <div class="stat">
@@ -58,8 +58,8 @@
       <% } else { %>
         <ul class="offers">
           <% col[3].forEach(function (o, idx) { var tn = traderName(o.name);
-               var maxUsdc = tier.limitNgn ? Math.floor(tier.limitNgn / o.rate_ngn) : 0;
-               var overLimit = tier.limitNgn && !o.mine && o.amount_usdc > maxUsdc; %>
+               var maxUsdc = tier.limitUsd ? Math.floor(tier.limitUsd / o.rate_usd) : 0;
+               var overLimit = tier.limitUsd && !o.mine && o.amount_usdc > maxUsdc; %>
             <li class="offer" title="<%= o.name %>">
               <span class="avatar hue-<%= hue(o.name) %>" aria-hidden="true"><%= initials(o.name) %></span>
               <div>
@@ -71,14 +71,14 @@
                   <% if (o.mine) { %><span class="pill">Yours</span><% } %>
                   <% if (idx === 0 && col[3].length > 1) { %><span class="pill best"><%- icon('star') %> Best price</span><% } %>
                 </div>
-                <div class="numbers">Up to <strong><%= o.amount_usdc.toLocaleString('en-NG') %> USDC</strong><% if (overLimit) { %> <span class="subtle">· you can take up to <%= maxUsdc.toLocaleString('en-NG') %></span><% } %></div>
+                <div class="numbers">Up to <strong><%= o.amount_usdc.toLocaleString('en-US') %> USDC</strong><% if (overLimit) { %> <span class="subtle">· you can take up to <%= maxUsdc.toLocaleString('en-US') %></span><% } %></div>
               </div>
               <div class="offer-end">
-                <span class="rate"><%= ngn(o.rate_ngn) %><small>per USDC</small></span>
+                <span class="rate"><%= price(o.rate_usd) %><small>per USDC</small></span>
                 <% if (o.mine) { %>
                   <form method="post" action="/offers/<%= o.id %>/close" class="inline"><button class="btn small" type="submit"><%- icon('x') %> Close</button></form>
                 <% } else { %>
-                  <a class="btn small <%= tier.limitNgn ? 'primary' : '' %>" href="/offers/<%= o.id %>"><%= col[1] %> <%- icon('arrow-right') %></a>
+                  <a class="btn small <%= tier.limitUsd ? 'primary' : '' %>" href="/offers/<%= o.id %>"><%= col[1] %> <%- icon('arrow-right') %></a>
                 <% } %>
               </div>
             </li>
@@ -95,7 +95,7 @@
       <span class="card-icon"><%- icon('plus') %></span>
       <div><h2>Post an offer</h2><span class="subtle">Other verified traders can take it</span></div>
     </div>
-    <% if (!tier.limitNgn) { %>
+    <% if (!tier.limitUsd) { %>
       <div class="empty"><%- icon('lock') %><p>Posting opens once INFRA verifies you.</p></div>
     <% } else { %>
       <form method="post" action="/offers">
@@ -112,12 +112,12 @@
             <input id="amount" name="amount_usdc" type="number" min="10" max="100000" step="1" required inputmode="numeric" placeholder="250">
           </div>
           <div>
-            <label for="rate">Rate (₦ per USDC)</label>
-            <input id="rate" name="rate_ngn" type="number" min="500" max="5000" step="1" required inputmode="numeric" placeholder="1605">
+            <label for="rate">Price ($ per USDC)</label>
+            <input id="rate" name="rate_usd" type="number" min="0.95" max="1.05" step="0.001" required inputmode="decimal" placeholder="1.002">
           </div>
         </div>
         <div class="spread" style="margin-top:14px">
-          <span class="subtle" id="offer-total" data-limit="<%= tier.limitNgn %>">Your limit: <%= ngn(tier.limitNgn) %> per offer</span>
+          <span class="subtle" id="offer-total" data-limit="<%= tier.limitUsd %>">Your limit: <%= usd(tier.limitUsd) %> per offer</span>
           <button class="btn primary" type="submit"><%- icon('plus') %> Post offer</button>
         </div>
       </form>
@@ -138,7 +138,7 @@
             <span class="avatar <%= t.side === 'buy' ? 'buy-tone' : 'sell-tone' %>" aria-hidden="true"><%- icon(t.side === 'buy' ? 'arrow-down-left' : 'arrow-up-right') %></span>
             <div>
               <div class="who-line">#<%= t.id %> · <span class="side-<%= t.side %>"><%= t.side === 'buy' ? 'Buying' : 'Selling' %></span> <%= t.amount_usdc %> USDC</div>
-              <div class="numbers"><%= ngn(t.total_ngn) %> · with <%= other %></div>
+              <div class="numbers"><%= usd(t.total_usd) %> · with <%= other %></div>
             </div>
             <div class="offer-end">
               <span class="pill <%= t.status === 'released' ? 'ok' : t.status === 'cancelled' ? 'bad' : 'warn' %>"><%= { open: 'Open', paid: 'Paid', released: 'Done', cancelled: 'Cancelled' }[t.status] %></span>
@@ -152,18 +152,18 @@
 </div>
 
 <script>
-  // While posting: show the offer's total in naira, and warn above the limit.
+  // While posting: show the offer's total in dollars, and warn above the limit.
   (function () {
     var out = document.getElementById('offer-total');
     var a = document.getElementById('amount'), r = document.getElementById('rate');
     if (!out || !a || !r) return;
     var limit = Number(out.dataset.limit), base = out.textContent;
-    function naira(n) { return '₦' + Math.round(n).toLocaleString('en-NG'); }
+    function dollars(n) { var c = Math.round(n * 100) / 100; return '$' + c.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(c) ? 0 : 2, maximumFractionDigits: 2 }); }
     function show() {
       var total = Number(a.value) * Number(r.value);
       if (!(total > 0)) { out.textContent = base; out.className = 'subtle'; return; }
       var over = total > limit;
-      out.textContent = 'Total ' + naira(total) + (over ? ' · above your ' + naira(limit) + ' limit' : '');
+      out.textContent = 'Total ' + dollars(total) + (over ? ' · above your ' + dollars(limit) + ' limit' : '');
       out.className = over ? 'subtle over' : 'subtle';
     }
     a.addEventListener('input', show); r.addEventListener('input', show);

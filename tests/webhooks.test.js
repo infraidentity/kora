@@ -70,7 +70,7 @@ test('a suspension via kyc_status_updated stops trading', async () => {
 
 test('consent_revoked deletes the trader and ends their session', async () => {
   const { app, agent, infra } = await signedIn();
-  await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '100', rate_ngn: '1600' });
+  await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '100', rate_usd: '1.000' });
 
   await sendWebhook(app, event('consent_revoked', { user_id: infra.user.id, consent_id: 'c1', app_id: 'a1', reason: 'user_revoked' }));
 

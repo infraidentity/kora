@@ -10,7 +10,7 @@ const fail = (status, code, message, extra = {}) => ({
 function fakeInfra(overrides = {}) {
   const user = {
     id: '11111111-2222-3333-4444-555555555555',
-    profile: { email: 'ada@example.com', first_name: 'Ada', last_name: 'Obi', country: 'NG', username: 'ada', profile_url: 'https://infraidentity.com/@ada' },
+    profile: { email: 'nina@example.com', first_name: 'Nina', last_name: 'Hart', country: 'US', username: 'nina', profile_url: 'https://infraidentity.com/@nina' },
     kyc: [{ kyc_level: 'level_1', status: 'verified', verified_at: '2026-05-01T10:00:00Z', provider: 'dojah' }],
     claims: [
       { claim_type: 'kyc_verified', provider: 'infra', proof_hash: '0xproofhash000000000000000000000001', expires_at: null },
@@ -37,7 +37,7 @@ function fakeInfra(overrides = {}) {
       request_id: 'req_1',
       user_id: app === 'payv' ? 'sandbox-user-1' : user.id,
       data: app === 'payv' ? {} : {
-        profile: { first_name: 'Ada', last_name: 'Obi', email: 'ada@example.com', country: 'NG', username: 'ada' },
+        profile: { first_name: 'Nina', last_name: 'Hart', email: 'nina@example.com', country: 'US', username: 'nina' },
         kyc: { kyc_level: 'level_1', status: 'verified', verified_at: '2026-04-01T00:00:00Z', provider: 'dojah' },
       },
       issued_at: '2026-10-21T00:00:00Z',
@@ -46,7 +46,7 @@ function fakeInfra(overrides = {}) {
     verifyConnectResult: track('verifyConnectResult', () => ({
       sub: user.id,
       jti: 'req_1',
-      data: { profile: { first_name: 'Ada', last_name: 'Obi', country: 'NG' }, kyc: { kyc_level: 'level_1', status: 'verified' } },
+      data: { profile: { first_name: 'Nina', last_name: 'Hart', country: 'US' }, kyc: { kyc_level: 'level_1', status: 'verified' } },
     })),
     verifyClaim: track('verifyClaim', () => ok({ valid: true, claim_type: 'kyc_verified' })),
     acknowledgeDeletion: track('acknowledgeDeletion', () => ok({ acknowledged: true })),

@@ -47,7 +47,7 @@ db.exec(`
     demo_name TEXT,
     side TEXT NOT NULL CHECK (side IN ('sell', 'buy')),   -- what the poster does with USDC
     amount_usdc REAL NOT NULL,
-    rate_ngn REAL NOT NULL,
+    rate_usd REAL NOT NULL,
     active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -58,8 +58,8 @@ db.exec(`
     taker_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     side TEXT NOT NULL,              -- what the taker does with USDC
     amount_usdc REAL NOT NULL,
-    rate_ngn REAL NOT NULL,
-    total_ngn REAL NOT NULL,
+    rate_usd REAL NOT NULL,
+    total_usd REAL NOT NULL,
     status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'paid', 'released', 'cancelled')),
     taker_proof_hash TEXT,           -- the taker's kyc_verified claim when the trade opened
     partner_check_id INTEGER REFERENCES partner_checks(id) ON DELETE SET NULL,
@@ -129,6 +129,28 @@ db.exec(`
 `);
 
 // Columns added after the first release, for databases created before them.
+// Kora used to trade against naira (rate_ngn, total_ngn). It now uses US
+// dollars. An older database is converted once, in place: prices and totals
+// are divided by the old demo rate (1,600 naira to the dollar) so past trades
+// keep their meaning, and the demo traders get their new names and prices.
+{
+  const has = (table, col) => db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === col);
+  if (has('offers', 'rate_ngn')) {
+    db.transaction(() => {
+      db.exec('ALTER TABLE offers RENAME COLUMN rate_ngn TO rate_usd');
+      db.exec('ALTER TABLE trades RENAME COLUMN rate_ngn TO rate_usd');
+      db.exec('ALTER TABLE trades RENAME COLUMN total_ngn TO total_usd');
+      db.exec('UPDATE offers SET rate_usd = rate_usd / 1600.0 WHERE user_id IS NOT NULL');
+      db.exec('UPDATE trades SET rate_usd = rate_usd / 1600.0, total_usd = total_usd / 1600.0');
+      const demo = db.prepare('UPDATE offers SET demo_name = ?, rate_usd = ? WHERE demo_name = ?');
+      demo.run('Demo trader · Lena', 1.004, 'Demo trader · Ada');
+      demo.run('Demo trader · Mateo', 1.002, 'Demo trader · Tunde');
+      demo.run('Demo trader · Priya', 0.996, 'Demo trader · Ngozi');
+      demo.run('Demo trader · Kenji', 0.998, 'Demo trader · Musa');
+    })();
+  }
+}
+
 try { db.exec('ALTER TABLE partner_checks ADD COLUMN signed INTEGER NOT NULL DEFAULT 0'); } catch { /* already there */ }
 try { db.exec('ALTER TABLE merchant_checks ADD COLUMN payer_address TEXT'); } catch { /* already there */ }
 // What INFRA's events told Kora about a person (newest first), and the
@@ -284,9 +306,9 @@ function getOffer(id) {
   `).get(id);
 }
 
-function createOffer({ userId, side, amountUsdc, rateNgn }) {
-  return db.prepare('INSERT INTO offers (user_id, side, amount_usdc, rate_ngn) VALUES (?, ?, ?, ?)')
-    .run(userId, side, amountUsdc, rateNgn).lastInsertRowid;
+function createOffer({ userId, side, amountUsdc, rateUsd }) {
+  return db.prepare('INSERT INTO offers (user_id, side, amount_usdc, rate_usd) VALUES (?, ?, ?, ?)')
+    .run(userId, side, amountUsdc, rateUsd).lastInsertRowid;
 }
 
 function closeOffer(id, userId) {
@@ -296,17 +318,17 @@ function closeOffer(id, userId) {
 function seedDemoOffers() {
   const count = db.prepare('SELECT COUNT(*) AS n FROM offers WHERE user_id IS NULL').get().n;
   if (count > 0) return;
-  const insert = db.prepare('INSERT INTO offers (demo_name, side, amount_usdc, rate_ngn) VALUES (?, ?, ?, ?)');
-  insert.run('Demo trader · Ada', 'sell', 500, 1615);
-  insert.run('Demo trader · Tunde', 'sell', 2500, 1608);
-  insert.run('Demo trader · Ngozi', 'buy', 1200, 1590);
-  insert.run('Demo trader · Musa', 'buy', 300, 1596);
+  const insert = db.prepare('INSERT INTO offers (demo_name, side, amount_usdc, rate_usd) VALUES (?, ?, ?, ?)');
+  insert.run('Demo trader · Lena', 'sell', 500, 1.004);
+  insert.run('Demo trader · Mateo', 'sell', 2500, 1.002);
+  insert.run('Demo trader · Priya', 'buy', 1200, 0.996);
+  insert.run('Demo trader · Kenji', 'buy', 300, 0.998);
 }
 
 function createTrade(trade) {
   return db.prepare(`
-    INSERT INTO trades (offer_id, taker_id, side, amount_usdc, rate_ngn, total_ngn, taker_proof_hash)
-    VALUES (@offerId, @takerId, @side, @amountUsdc, @rateNgn, @totalNgn, @takerProofHash)
+    INSERT INTO trades (offer_id, taker_id, side, amount_usdc, rate_usd, total_usd, taker_proof_hash)
+    VALUES (@offerId, @takerId, @side, @amountUsdc, @rateUsd, @totalUsd, @takerProofHash)
   `).run(trade).lastInsertRowid;
 }
 

@@ -6,11 +6,11 @@ const { messageFor } = require('../services/messages');
 const { normaliseCode, redeemOwnCode, sampleIdentity } = require('../services/trade-identity');
 
 const RESYNC_AFTER_MS = 5 * 60 * 1000;
-const ngn = (n) => '₦' + Math.round(n).toLocaleString('en-NG');
+const { usd, price } = require('../utils/money');
 
 /**
  * Who buys and who sells in a trade. Offers say what the poster (maker) does
- * with USDC; the taker does the opposite. The buyer sends naira first, then
+ * with USDC; the taker does the opposite. The buyer sends dollars first, then
  * the seller releases USDC.
  */
 function roles(trade) {
@@ -69,7 +69,7 @@ module.exports = function marketRoutes({ infra }) {
       name: o.user_id ? displayName(o.first_name, o.last_name) : o.demo_name,
       mine: o.user_id === req.user.id,
       verified: o.user_id ? o.kyc_status === 'verified' : true,
-      totalNgn: o.amount_usdc * o.rate_ngn,
+      totalUsd: o.amount_usdc * o.rate_usd,
     }));
     res.render('market', {
       title: 'Market',
@@ -80,7 +80,8 @@ module.exports = function marketRoutes({ infra }) {
       buys: offers.filter((o) => o.side === 'buy'),
       trades: db.listTradesFor(req.user.id),
       flash: takeFlash(req),
-      ngn,
+      usd,
+      price,
     });
   });
 
@@ -110,16 +111,16 @@ module.exports = function marketRoutes({ infra }) {
     const tier = tierFor(req.user);
     const side = req.body.side === 'buy' ? 'buy' : 'sell';
     const amountUsdc = Number(req.body.amount_usdc);
-    const rateNgn = Number(req.body.rate_ngn);
+    const rateUsd = Number(req.body.rate_usd);
 
-    if (tier.limitNgn === 0) {
+    if (tier.limitUsd === 0) {
       flash(req, 'error', 'Verify your identity with INFRA before posting offers.');
-    } else if (!(amountUsdc >= 10 && amountUsdc <= 100_000) || !(rateNgn >= 500 && rateNgn <= 5000)) {
-      flash(req, 'error', 'Enter an amount between 10 and 100,000 USDC and a rate between ₦500 and ₦5,000.');
-    } else if (amountUsdc * rateNgn > tier.limitNgn) {
-      flash(req, 'error', `That offer is worth ${ngn(amountUsdc * rateNgn)}. Your limit is ${ngn(tier.limitNgn)} per trade.`);
+    } else if (!(amountUsdc >= 10 && amountUsdc <= 100_000) || !(rateUsd >= 0.95 && rateUsd <= 1.05)) {
+      flash(req, 'error', 'Enter an amount between 10 and 100,000 USDC and a price between $0.95 and $1.05 per USDC.');
+    } else if (amountUsdc * rateUsd > tier.limitUsd) {
+      flash(req, 'error', `That offer is worth ${usd(amountUsdc * rateUsd)}. Your limit is ${usd(tier.limitUsd)} per trade.`);
     } else {
-      db.createOffer({ userId: req.user.id, side, amountUsdc, rateNgn });
+      db.createOffer({ userId: req.user.id, side, amountUsdc, rateUsd });
       flash(req, 'ok', 'Your offer is live.');
     }
     res.redirect('/market');
@@ -141,7 +142,8 @@ module.exports = function marketRoutes({ infra }) {
       offer: { ...offer, name: offer.user_id ? displayName(offer.first_name, offer.last_name) : offer.demo_name },
       mine: offer.user_id === req.user.id,
       flash: takeFlash(req),
-      ngn,
+      usd,
+      price,
     });
   });
 
@@ -154,13 +156,13 @@ module.exports = function marketRoutes({ infra }) {
     }
     const tier = tierFor(req.user);
     const amountUsdc = Number(req.body.amount_usdc);
-    const total = amountUsdc * offer.rate_ngn;
+    const total = amountUsdc * offer.rate_usd;
 
     let problem = null;
     if (offer.user_id === req.user.id) problem = "You can't trade with your own offer.";
-    else if (tier.limitNgn === 0) problem = 'Verify your identity with INFRA before trading.';
+    else if (tier.limitUsd === 0) problem = 'Verify your identity with INFRA before trading.';
     else if (!(amountUsdc >= 1) || amountUsdc > offer.amount_usdc) problem = `Enter an amount between 1 and ${offer.amount_usdc} USDC.`;
-    else if (total > tier.limitNgn) problem = `That trade is worth ${ngn(total)}. Your limit is ${ngn(tier.limitNgn)} per trade.`;
+    else if (total > tier.limitUsd) problem = `That trade is worth ${usd(total)}. Your limit is ${usd(tier.limitUsd)} per trade.`;
     if (problem) {
       flash(req, 'error', problem);
       return res.redirect(back);
@@ -174,8 +176,8 @@ module.exports = function marketRoutes({ infra }) {
       takerId: req.user.id,
       side: offer.side === 'sell' ? 'buy' : 'sell',
       amountUsdc,
-      rateNgn: offer.rate_ngn,
-      totalNgn: total,
+      rateUsd: offer.rate_usd,
+      totalUsd: total,
       takerProofHash: proof?.proof_hash || null,
     });
     res.redirect(`/trades/${id}`);
@@ -212,7 +214,8 @@ module.exports = function marketRoutes({ infra }) {
         : displayName(trade.taker_first_name, trade.taker_last_name),
       claimLabels: CLAIM_LABELS,
       flash: takeFlash(req),
-      ngn,
+      usd,
+      price,
     });
   });
 

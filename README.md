@@ -1,6 +1,6 @@
 # Kora: an example app built on INFRA
 
-> **Demo app. No real naira or USDC is traded.** Kora exists to show how an
+> **Demo app. No real dollars or USDC are traded.** Kora exists to show how an
 > app uses [INFRA](https://infraidentity.com) for sign-in, verified details,
 > proofs, live updates and data deletion. Copy whatever helps you.
 
@@ -50,7 +50,7 @@ Questions or problems: open an issue on this repo.
 
 ## What Kora shows
 
-Kora is a peer-to-peer marketplace where people buy and sell USDC for naira.
+Kora is a peer-to-peer marketplace where people buy and sell USDC for US dollars.
 Strangers swapping money is exactly where identity matters, so Kora uses
 INFRA for everything that touches identity, and in doing so exercises every
 part of INFRA's API.
@@ -58,7 +58,7 @@ part of INFRA's API.
 | In Kora | INFRA API |
 |---|---|
 | **Continue with INFRA** (OAuth 2.0 + PKCE, refresh tokens) | `/oauth2/auth`, `/oauth2/token`, `GET /users/me` |
-| **Trading limits** follow verification: Browse → Starter (₦500k) → Full (₦5m) | `GET /users/:id/kyc`, `GET /users/:id/claims` |
+| **Trading limits** follow verification: Browse → Starter ($500) → Full ($5,000) | `GET /users/:id/kyc`, `GET /users/:id/claims` |
 | **Your details**: everything INFRA shared, and how to withdraw it | `GET /users/:id/profile`, `GET /users/:id/documents/metadata` |
 | **Verified names on every trade**: before money moves, each trader shares their own INFRA Connect code on the trade and the other side sees their verified full name (demo traders show a sample); the result's signature is checked against INFRA's public keys | `POST /connect/request`, `/.well-known/jwks.json` |
 | **INFRA proof** stamped on every trade, checkable later | `POST /claims/verify` |
@@ -66,7 +66,7 @@ part of INFRA's API.
 | **Live updates**: limits change the moment INFRA verifies someone; withdrawn access deletes their data and signs them out | webhooks (all 9 events), deletion callback, `POST /deletion/acknowledge` |
 | **Developer panel** at `/dev`: every call to INFRA and every webhook, with signature results | — |
 
-Trades are simulated (no naira or USDC changes hands in a trade). Four demo
+Trades are simulated (no dollars or USDC change hands in a trade). Four demo
 traders are always online so one person can test a full trade.
 
 ## One INFRA app

@@ -45,14 +45,14 @@ describe('Sign in with INFRA', () => {
   test('signing in stores what INFRA shared and opens the market', async () => {
     const { agent, infra } = await signedIn();
     const user = db.getUser(infra.user.id);
-    expect(user).toMatchObject({ first_name: 'Ada', kyc_status: 'verified', kyc_level: 'level_1' });
+    expect(user).toMatchObject({ first_name: 'Nina', kyc_status: 'verified', kyc_level: 'level_1' });
     expect(user.claims.map((c) => c.claim_type)).toEqual(['kyc_verified', 'age_over_18']);
 
     const market = await agent.get('/market');
     expect(market.status).toBe(200);
     expect(market.text).toContain('Starter');
-    expect(market.text).toContain('₦500,000');
-    expect(market.text).toContain('Demo trader · Ada');
+    expect(market.text).toContain('$500');
+    expect(market.text).toContain('Demo trader · Lena');
   });
 
   test('a person who has not started verification can browse but not trade', async () => {
@@ -91,21 +91,21 @@ describe('Sign in with INFRA', () => {
 });
 
 describe('Offers and trades', () => {
-  test('a Starter trader cannot go over ₦500,000', async () => {
+  test('a Starter trader cannot go over $500', async () => {
     const { agent, infra } = await signedIn();
-    const offer = db.listOffers().find((o) => o.demo_name === 'Demo trader · Tunde'); // ₦1,608
-    const res = await agent.post(`/offers/${offer.id}/trade`).type('form').send({ amount_usdc: '400' }); // ₦643,200
+    const offer = db.listOffers().find((o) => o.demo_name === 'Demo trader · Mateo'); // $1.002
+    const res = await agent.post(`/offers/${offer.id}/trade`).type('form').send({ amount_usdc: '600' }); // $601.20
     expect(res.headers.location).toBe(`/offers/${offer.id}`);
     expect(db.listTradesFor(infra.user.id)).toHaveLength(0);
     const page = await agent.get(`/offers/${offer.id}`);
-    expect(page.text).toContain('Your limit is ₦500,000 per trade');
+    expect(page.text).toContain('Your limit is $500 per trade');
   });
 
   test('a trade within the limit opens, carries the INFRA proof, and completes', async () => {
     const { agent, infra } = await signedIn();
-    const offer = db.listOffers().find((o) => o.demo_name === 'Demo trader · Ada'); // sells at ₦1,615
+    const offer = db.listOffers().find((o) => o.demo_name === 'Demo trader · Lena'); // sells at $1.004
     const tradeId = tradeIdFrom(await agent.post(`/offers/${offer.id}/trade`).type('form').send({ amount_usdc: '100' }));
-    expect(db.getTrade(tradeId)).toMatchObject({ side: 'buy', total_ngn: 161500, status: 'open', taker_proof_hash: '0xproofhash000000000000000000000001' });
+    expect(db.getTrade(tradeId)).toMatchObject({ side: 'buy', total_usd: 100.4, status: 'open', taker_proof_hash: '0xproofhash000000000000000000000001' });
 
     await agent.post(`/trades/${tradeId}/paid`);
     expect(db.getTrade(tradeId).status).toBe('open'); // no money moves before verified names
@@ -136,9 +136,9 @@ describe('Offers and trades', () => {
 
   test('verified traders can post offers within their limit', async () => {
     const { agent, infra } = await signedIn();
-    await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '200', rate_ngn: '1600' });
+    await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '200', rate_usd: '1.000' });
     expect(db.listOffers().filter((o) => o.user_id === infra.user.id)).toHaveLength(1);
-    await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '1000', rate_ngn: '1600' }); // ₦1.6m
+    await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '1000', rate_usd: '1.000' }); // $1,000
     expect(db.listOffers().filter((o) => o.user_id === infra.user.id)).toHaveLength(1);
   });
 
@@ -154,7 +154,7 @@ describe('Offers and trades', () => {
 
 describe('Verified names on a trade (INFRA Connect)', () => {
   const openDemoTrade = async (agent) => {
-    const offer = db.listOffers().find((o) => o.demo_name === 'Demo trader · Ada');
+    const offer = db.listOffers().find((o) => o.demo_name === 'Demo trader · Lena');
     return tradeIdFrom(await agent.post(`/offers/${offer.id}/trade`).type('form').send({ amount_usdc: '10' }));
   };
 
@@ -163,14 +163,14 @@ describe('Verified names on a trade (INFRA Connect)', () => {
     const tradeId = await openDemoTrade(agent);
     let page = (await agent.get(`/trades/${tradeId}`)).text;
     expect(page).toContain('Verified names on this trade');
-    expect(page).toContain('Ada Demo (sample)');
+    expect(page).toContain('Lena Demo (sample)');
     expect(page).toContain('Waiting for both verified names');
 
     await agent.post(`/trades/${tradeId}/identity`).type('form').send({ code: 'cnx ab12 cd34' });
     const redeem = infra.calls.find((c) => c.name === 'redeemConnectCode');
     expect(redeem.args[0]).toEqual({ code: 'CNX-AB12-CD34', scopes: ['profile:basic', 'kyc:status'] });
     page = (await agent.get(`/trades/${tradeId}`)).text;
-    expect(page).toContain('Ada Obi is now shown to the other trader as your verified name.');
+    expect(page).toContain('Nina Hart is now shown to the other trader as your verified name.');
     expect(page).not.toContain('Waiting for both verified names');
 
     await agent.post(`/trades/${tradeId}/paid`);
@@ -192,7 +192,7 @@ describe('Verified names on a trade (INFRA Connect)', () => {
 
   test('two real traders each share their own name and see the other', async () => {
     const seller = await signedIn();
-    await seller.agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '100', rate_ngn: '1600' });
+    await seller.agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '100', rate_usd: '1.000' });
     const offer = db.listOffers().find((o) => o.user_id === seller.infra.user.id);
 
     const buyer = await signedIn();
@@ -213,7 +213,7 @@ describe('Verified names on a trade (INFRA Connect)', () => {
     const t = db.getTrade(tradeId);
     expect(t.taker_check_id).toBeTruthy();
     expect(t.maker_check_id).toBeTruthy();
-    expect((await seller.agent.get(`/trades/${tradeId}`)).text).toContain('Only release once naira arrives from an account in this name.');
+    expect((await seller.agent.get(`/trades/${tradeId}`)).text).toContain('Only release once the dollars arrive from an account in this name.');
     await buyerAgent.post(`/trades/${tradeId}/paid`);
     expect(db.getTrade(tradeId).status).toBe('paid');
   });
@@ -231,7 +231,7 @@ describe('Verified names on a trade (INFRA Connect)', () => {
     await agent.post(`/trades/${tradeId}/identity`).type('form').send({ code: 'CNX-AB12-CD34' });
     expect(infra.calls.find((c) => c.name === 'verifyConnectResult').args[0]).toBe('eyJ.signed.result');
     const page = (await agent.get(`/trades/${tradeId}`)).text;
-    expect(page).toContain('Ada Obi');
+    expect(page).toContain('Nina Hart');
     expect(page).not.toContain('Tampered');
     expect(page).toContain('signed by INFRA');
   });
@@ -297,7 +297,7 @@ describe('Merchant badge with PayV', () => {
     expect(paid).toMatchObject({ paymentRequestId: 'pr_1', xPayment: 'eyJ4NDAyVmVyc2lvbiI6MX0=', infraUserId: 'sandbox-user-1' });
     expect(db.getMerchantCheck('pr_1')).toMatchObject({ status: 'paid', tx_hash: '0xtx1234567890abcdef', first_name: 'Sade' });
 
-    await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '100', rate_ngn: '1600' });
+    await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '100', rate_usd: '1.000' });
     expect(db.listOffers().find((o) => o.user_id === infra.user.id).merchant_name).toMatch(/^Sade/);
   });
 
@@ -389,7 +389,7 @@ describe('Pages', () => {
     const { agent } = await signedIn();
     const res = await agent.get('/account');
     expect(res.status).toBe(200);
-    expect(res.text).toContain('ada@example.com');
+    expect(res.text).toContain('nina@example.com');
     expect(res.text).toContain('Over 18');
     expect(res.text).toContain('passport');
     expect(res.text).toContain('profile:read');

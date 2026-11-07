@@ -70,10 +70,13 @@ async function redeemOwnCode({ infra, code, userId, messageFor }) {
   };
 }
 
-/** A demo trader's sample identity ("Demo trader · Tunde" → Tunde). */
+// Where each demo trader (sample) is from.
+const SAMPLE_COUNTRY = { Lena: 'DE', Mateo: 'ES', Priya: 'IN', Kenji: 'JP' };
+
+/** A demo trader's sample identity ("Demo trader · Lena" → Lena). */
 function sampleIdentity(demoName) {
   const first = String(demoName || '').split('·').pop().trim() || 'Demo';
-  return { first_name: first, last_name: 'Demo', kyc_status: 'verified', kyc_level: 'level_1', country: 'NG', sample: true };
+  return { first_name: first, last_name: 'Demo', kyc_status: 'verified', kyc_level: 'level_1', country: SAMPLE_COUNTRY[first] || 'US', sample: true };
 }
 
 module.exports = { SCOPES, normaliseCode, redeemOwnCode, sampleIdentity };
