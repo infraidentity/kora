@@ -81,9 +81,9 @@ records the merchant's consent without counting toward the plan.
 1. `npm install`, then `cp .env.example .env`.
 2. In the INFRA developer portal, create **Kora**:
    - Redirect URI: `http://localhost:3002/callback` (or your Railway URL + `/callback`)
-   - Scopes: `profile:read kyc:read claims:read documents:metadata`, plus
-     `phone:read proof:age_over_18 proof:kyc_verified` (optional: sign-in
-     still works if the app doesn't allow them yet)
+   - Scopes: `profile:read kyc:read claims:read documents:metadata` and all
+     ten proof permissions (`proof:age_over_18` … `proof:postal_region`),
+     plus `phone:read` (optional: sign-in still works without it)
    - Deletion callback URL: `<public url>/webhooks/deletion`
    - Put its client id and secret in `CLIENT_ID` / `CLIENT_SECRET`.
 3. On the portal's **Billing** page, turn on **Pay-As-You-Verify** for the
@@ -108,12 +108,13 @@ records the merchant's consent without counting toward the plan.
   a sample identity. For the full two-person exchange, sign in as a second
   test user in another browser: one posts an offer, the other takes it, and
   both share their codes on the trade.
-- **Prove it with INFRA (beta)**: on Your details, press "Prove I'm over 18 and
-  verified". Kora asks INFRA for a one-use challenge, INFRA proves the facts
+- **Prove it with INFRA (beta)**: on Your details, press "Prove my facts".
+  Kora tries every fact INFRA can prove, each on its own: a one-use challenge,
+  INFRA proves the fact
   (zero-knowledge, about a second), and Kora checks the proof with its own
   client credentials. Kora never sees your birthday or ID. Each fact needs its
-  own permission (`proof:age_over_18`, `proof:kyc_verified`), which you agree
-  to on INFRA's consent screen. The page then checks
+  own permission (`proof:<fact>`), which you agree to on INFRA's consent
+  screen. Facts INFRA hasn't confirmed for you show as "not confirmed". The page then checks
   the same proof with a different challenge to show a copied proof is refused.
   See https://docs.infraidentity.com/proofs/.
 - **Signed by INFRA**: Your details shows whether the facts INFRA shared

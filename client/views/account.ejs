@@ -14,6 +14,11 @@
     'claims:read': 'Facts INFRA confirmed, like "Over 18"',
     'documents:metadata': 'Which IDs you verified (never the documents)',
     'phone:read': 'Your phone number',
+    'proof:age_over_18': 'Proof that you are over 18', 'proof:age_over_21': 'Proof that you are over 21',
+    'proof:kyc_verified': 'Proof that you are verified', 'proof:unique_human': 'Proof that you are one real person',
+    'proof:phone_verified': 'Proof that your phone is confirmed', 'proof:address_verified': 'Proof that your address is confirmed',
+    'proof:watchlist_clear': 'Proof that you passed the safety check', 'proof:resident_country': 'Proof of your country',
+    'proof:resident_state': 'Proof of your state', 'proof:postal_region': 'Proof of your postal area',
     'offline_access': 'Stay up to date while you are away',
   };
   var levelText = user.kyc_level ? user.kyc_level.replace('level_', 'Level ') : null;
@@ -113,9 +118,9 @@
 
 <section class="card stack zk-card" style="margin-top:16px" id="zk-demo">
   <div class="card-head"><span class="card-icon"><%- icon('seal') %></span><div><h2>Prove it with INFRA</h2><span class="subtle">The answer, not the data</span></div></div>
-  <p class="muted">Kora asks INFRA to <strong>prove</strong> you're over 18 and verified. Kora gets a proof that says yes, and nothing else: not your birthday, not your ID. The proof only works for Kora, right now.</p>
+  <p class="muted">Kora asks INFRA to <strong>prove</strong> each fact about you, one at a time. For each one Kora gets a proof that says yes (or one short detail, like your country), and nothing else: not your birthday, not your ID, not your address. Each proof only works for Kora, right now.</p>
   <div class="row">
-    <button class="btn primary" type="button" id="zk-run"><%- infraMark('light') %> Prove I'm over 18 and verified</button>
+    <button class="btn primary" type="button" id="zk-run"><%- infraMark('light') %> Prove my facts</button>
     <span class="subtle" id="zk-status" role="status" aria-live="polite"></span>
   </div>
   <div id="zk-result" hidden>
@@ -130,24 +135,43 @@
     var box = document.getElementById('zk-result');
     var factsEl = document.getElementById('zk-facts');
     var detailsEl = document.getElementById('zk-details');
-    var LABELS = { age_over_18: 'Over 18', kyc_verified: 'Verified by INFRA' };
+    var LABELS = {
+      age_over_18: 'Over 18', age_over_21: 'Over 21', kyc_verified: 'Verified by INFRA',
+      unique_human: 'One real person', phone_verified: 'Phone confirmed', address_verified: 'Address confirmed',
+      watchlist_clear: 'Passed the safety check', resident_country: 'Country', resident_state: 'State', postal_region: 'Postal area'
+    };
+    var STATUS = { not_confirmed: 'Not confirmed for you yet', no_permission: 'No permission given', failed: 'Could not prove', off: 'Proofs are off' };
+    function esc(t) { var d = document.createElement('div'); d.textContent = String(t); return d.innerHTML; }
     function li(html) { var el = document.createElement('li'); el.innerHTML = html; return el; }
     var tick = '<span class="fact-tick"><%- icon('check') %></span>';
+    var dash = '<span class="fact-tick" style="background:var(--line, #ccc)">–</span>';
+    var bad = '<span class="fact-tick" style="background:var(--bad)">!</span>';
     btn.addEventListener('click', function () {
-      btn.disabled = true; status.textContent = 'Asking INFRA for a proof…'; box.hidden = true;
+      btn.disabled = true; status.textContent = 'Asking INFRA for proofs… (about 5 seconds)'; box.hidden = true;
       fetch('/zk/demo', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' })
         .then(function (r) { return r.json(); })
         .then(function (d) {
           btn.disabled = false;
-          if (!d.facts) { status.textContent = d.message || 'Something went wrong.'; return; }
-          status.textContent = d.ok ? 'Proof checked.' : 'The proof did not check out.';
+          if (!d.results) { status.textContent = d.message || 'Something went wrong.'; return; }
+          var proven = d.results.filter(function (r) { return r.status === 'proven'; });
+          status.textContent = proven.length + ' of ' + d.results.length + ' facts proven and checked.';
           factsEl.innerHTML = ''; detailsEl.innerHTML = '';
-          Object.keys(d.facts).forEach(function (k) {
-            factsEl.appendChild(li(tick + '<span><strong>' + (LABELS[k] || k) + '</strong><span class="subtle">' + (d.facts[k] === true ? 'Yes' : String(d.facts[k])) + '</span></span>'));
+          d.results.forEach(function (r) {
+            var mark = r.status === 'proven' ? tick : (r.status === 'failed' ? bad : dash);
+            var text = r.status === 'proven' ? (r.value === true ? 'Yes' : esc(r.value)) + ' · ' + ((r.prove_ms + r.verify_ms) / 1000).toFixed(1) + ' s' : STATUS[r.status] || r.status;
+            factsEl.appendChild(li(mark + '<span><strong>' + (LABELS[r.fact] || esc(r.fact)) + '</strong><span class="subtle">' + text + '</span></span>'));
           });
-          detailsEl.appendChild(li(tick + '<span>Kora never saw your birthday or ID</span>'));
-          detailsEl.appendChild(li(tick + '<span>Proof made in ' + (d.timings.prove_ms / 1000).toFixed(1) + ' s, checked in ' + (d.timings.verify_ms / 1000).toFixed(1) + ' s (' + d.proof_kb + ' KB)</span>'));
-          detailsEl.appendChild(li((d.copied_proof_refused ? tick : '<span class="fact-tick" style="background:var(--bad)">!</span>') + '<span>' + (d.copied_proof_refused ? 'The same proof, copied to another session, was refused' : 'Warning: a copied proof was not refused') + '</span>'));
+          detailsEl.appendChild(li(tick + '<span>Kora never saw your birthday, ID, phone number or address</span>'));
+          if (proven.length) {
+            var p = proven[0];
+            detailsEl.appendChild(li(tick + '<span>Each proof is about ' + p.proof_kb + ' KB and is made in about ' + (p.prove_ms / 1000).toFixed(1) + ' s</span>'));
+          }
+          if (d.copied_proof_refused !== null) {
+            detailsEl.appendChild(li((d.copied_proof_refused ? tick : bad) + '<span>' + (d.copied_proof_refused ? 'A proof copied to another session was refused' : 'Warning: a copied proof was not refused') + '</span>'));
+          }
+          if (d.results.some(function (r) { return r.status === 'no_permission'; })) {
+            detailsEl.appendChild(li(dash + '<span>To prove the rest, sign out, sign in again and allow "Prove facts about you"</span>'));
+          }
           box.hidden = false;
         })
         .catch(function () { btn.disabled = false; status.textContent = 'INFRA is unreachable right now.'; });

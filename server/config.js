@@ -29,11 +29,11 @@ const config = {
     clientId: env.CLIENT_ID || '',
     clientSecret: env.CLIENT_SECRET || '',
     redirectUri: env.REDIRECT_URI || 'http://localhost:3002/callback',
-    scopes: env.SCOPES || 'profile:read kyc:read claims:read documents:metadata offline_access',
+    // The proof permissions are for "Prove it with INFRA" (one per fact; Kora tests them all).
+    scopes: env.SCOPES || 'profile:read kyc:read claims:read documents:metadata offline_access proof:age_over_18 proof:age_over_21 proof:kyc_verified proof:unique_human proof:phone_verified proof:address_verified proof:watchlist_clear proof:resident_country proof:resident_state proof:postal_region',
     // Asked for too, but sign-in still works without them: if Kora's app on
-    // INFRA doesn't allow one yet, Kora signs in again without it. The proof
-    // permissions are for "Prove it with INFRA" (one per fact).
-    optionalScopes: env.OPTIONAL_SCOPES ?? 'phone:read proof:age_over_18 proof:kyc_verified',
+    // INFRA doesn't allow one yet, Kora signs in again without it.
+    optionalScopes: env.OPTIONAL_SCOPES ?? 'phone:read',
     authUrl: env.HYDRA_AUTH_URL || 'https://oauth.infraidentity.com/oauth2/auth',
     tokenUrl: env.HYDRA_TOKEN_URL || 'https://oauth.infraidentity.com/oauth2/token',
   },
