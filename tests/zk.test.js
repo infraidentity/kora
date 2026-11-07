@@ -31,6 +31,13 @@ test("a person INFRA hasn't verified gets a plain explanation", async () => {
   expect(res.body.message).toMatch(/hasn't confirmed/);
 });
 
+test.each(['zkChallenge', 'zkProof'])('without the proof permission (%s), it says how to give it', async (step) => {
+  const { agent } = await signedIn(zk({ [step]: async () => ({ ok: false, status: 403, code: 'INSUFFICIENT_SCOPE' }) }));
+  const res = await agent.post('/zk/demo').send({});
+  expect(res.body.ok).toBe(false);
+  expect(res.body.message).toMatch(/permission/);
+});
+
 test('the account page has the button', async () => {
   const { agent } = await signedIn(zk());
   expect((await agent.get('/account')).text).toContain('Prove it with INFRA');

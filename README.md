@@ -81,7 +81,9 @@ records the merchant's consent without counting toward the plan.
 1. `npm install`, then `cp .env.example .env`.
 2. In the INFRA developer portal, create **Kora**:
    - Redirect URI: `http://localhost:3002/callback` (or your Railway URL + `/callback`)
-   - Scopes: `profile:read kyc:read claims:read documents:metadata`
+   - Scopes: `profile:read kyc:read claims:read documents:metadata`, plus
+     `phone:read proof:age_over_18 proof:kyc_verified` (optional: sign-in
+     still works if the app doesn't allow them yet)
    - Deletion callback URL: `<public url>/webhooks/deletion`
    - Put its client id and secret in `CLIENT_ID` / `CLIENT_SECRET`.
 3. On the portal's **Billing** page, turn on **Pay-As-You-Verify** for the
@@ -109,7 +111,9 @@ records the merchant's consent without counting toward the plan.
 - **Prove it with INFRA (beta)**: on Your details, press "Prove I'm over 18 and
   verified". Kora asks INFRA for a one-use challenge, INFRA proves the facts
   (zero-knowledge, about a second), and Kora checks the proof with its own
-  client credentials. Kora never sees your birthday or ID. The page then checks
+  client credentials. Kora never sees your birthday or ID. Each fact needs its
+  own permission (`proof:age_over_18`, `proof:kyc_verified`), which you agree
+  to on INFRA's consent screen. The page then checks
   the same proof with a different challenge to show a copied proof is refused.
   See https://docs.infraidentity.com/proofs/.
 - **Signed by INFRA**: Your details shows whether the facts INFRA shared

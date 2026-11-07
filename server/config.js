@@ -31,8 +31,9 @@ const config = {
     redirectUri: env.REDIRECT_URI || 'http://localhost:3002/callback',
     scopes: env.SCOPES || 'profile:read kyc:read claims:read documents:metadata offline_access',
     // Asked for too, but sign-in still works without them: if Kora's app on
-    // INFRA doesn't allow one yet, Kora signs in again without it.
-    optionalScopes: env.OPTIONAL_SCOPES ?? 'phone:read',
+    // INFRA doesn't allow one yet, Kora signs in again without it. The proof
+    // permissions are for "Prove it with INFRA" (one per fact).
+    optionalScopes: env.OPTIONAL_SCOPES ?? 'phone:read proof:age_over_18 proof:kyc_verified',
     authUrl: env.HYDRA_AUTH_URL || 'https://oauth.infraidentity.com/oauth2/auth',
     tokenUrl: env.HYDRA_TOKEN_URL || 'https://oauth.infraidentity.com/oauth2/token',
   },

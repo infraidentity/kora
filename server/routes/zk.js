@@ -6,6 +6,8 @@ const { requireUser, accessToken } = require('../services/session');
 // person without receiving the data behind them (zero-knowledge proof), checks
 // the proof, then shows that a copied proof is refused.
 const FACTS = ['age_over_18', 'kyc_verified'];
+// Each fact needs its own permission (proof:age_over_18, proof:kyc_verified).
+const NO_PERMISSION = 'Kora doesn\x27t have your permission to prove this yet. Sign out, sign in again and allow "Prove you are over 18" and "Prove you are verified".';
 
 module.exports = function zkRoutes({ infra }) {
   const router = express.Router();
@@ -19,13 +21,14 @@ module.exports = function zkRoutes({ infra }) {
       let t = Date.now();
       const ch = await infra.zkChallenge(token, req.user.id);
       if (ch.status === 404) return res.json({ ok: false, available: false, message: 'Proofs aren\'t switched on for Kora yet.' });
+      if (ch.code === 'INSUFFICIENT_SCOPE') return res.json({ ok: false, message: NO_PERMISSION });
       if (!ch.ok) return res.json({ ok: false, message: ch.message || 'INFRA could not start a proof.' });
       const challengeMs = ms(t);
 
       t = Date.now();
       const pr = await infra.zkProof(token, req.user.id, ch.data.challenge_id, FACTS);
       if (!pr.ok) {
-        const message = pr.code === 'FACT_NOT_AVAILABLE'
+        const message = pr.code === 'INSUFFICIENT_SCOPE' ? NO_PERMISSION : pr.code === 'FACT_NOT_AVAILABLE'
           ? 'INFRA hasn\'t confirmed these facts for your account yet. Verify in INFRA Accounts, then try again.'
           : (pr.message || 'INFRA could not make the proof.');
         return res.json({ ok: false, message });
