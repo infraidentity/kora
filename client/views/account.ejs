@@ -111,6 +111,50 @@
 
 <%- include('partials/tier') %>
 
+<section class="card stack zk-card" style="margin-top:16px" id="zk-demo">
+  <div class="card-head"><span class="card-icon"><%- icon('seal') %></span><div><h2>Prove it with INFRA</h2><span class="subtle">The answer, not the data</span></div></div>
+  <p class="muted">Kora asks INFRA to <strong>prove</strong> you're over 18 and verified. Kora gets a proof that says yes, and nothing else: not your birthday, not your ID. The proof only works for Kora, right now.</p>
+  <div class="row">
+    <button class="btn primary" type="button" id="zk-run"><%- infraMark('light') %> Prove I'm over 18 and verified</button>
+    <span class="subtle" id="zk-status" role="status" aria-live="polite"></span>
+  </div>
+  <div id="zk-result" hidden>
+    <ul class="facts-grid" id="zk-facts"></ul>
+    <ul class="access-list" id="zk-details" style="margin-top:12px"></ul>
+  </div>
+</section>
+<script>
+  (function () {
+    var btn = document.getElementById('zk-run');
+    var status = document.getElementById('zk-status');
+    var box = document.getElementById('zk-result');
+    var factsEl = document.getElementById('zk-facts');
+    var detailsEl = document.getElementById('zk-details');
+    var LABELS = { age_over_18: 'Over 18', kyc_verified: 'Verified by INFRA' };
+    function li(html) { var el = document.createElement('li'); el.innerHTML = html; return el; }
+    var tick = '<span class="fact-tick"><%- icon('check') %></span>';
+    btn.addEventListener('click', function () {
+      btn.disabled = true; status.textContent = 'Asking INFRA for a proof…'; box.hidden = true;
+      fetch('/zk/demo', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          btn.disabled = false;
+          if (!d.facts) { status.textContent = d.message || 'Something went wrong.'; return; }
+          status.textContent = d.ok ? 'Proof checked.' : 'The proof did not check out.';
+          factsEl.innerHTML = ''; detailsEl.innerHTML = '';
+          Object.keys(d.facts).forEach(function (k) {
+            factsEl.appendChild(li(tick + '<span><strong>' + (LABELS[k] || k) + '</strong><span class="subtle">' + (d.facts[k] === true ? 'Yes' : String(d.facts[k])) + '</span></span>'));
+          });
+          detailsEl.appendChild(li(tick + '<span>Kora never saw your birthday or ID</span>'));
+          detailsEl.appendChild(li(tick + '<span>Proof made in ' + (d.timings.prove_ms / 1000).toFixed(1) + ' s, checked in ' + (d.timings.verify_ms / 1000).toFixed(1) + ' s (' + d.proof_kb + ' KB)</span>'));
+          detailsEl.appendChild(li((d.copied_proof_refused ? tick : '<span class="fact-tick" style="background:var(--bad)">!</span>') + '<span>' + (d.copied_proof_refused ? 'The same proof, copied to another session, was refused' : 'Warning: a copied proof was not refused') + '</span>'));
+          box.hidden = false;
+        })
+        .catch(function () { btn.disabled = false; status.textContent = 'INFRA is unreachable right now.'; });
+    });
+  })();
+</script>
+
 <section class="card stack" style="margin-top:16px" id="infra-events">
   <div class="card-head"><span class="card-icon"><%- icon('bell') %></span><div><h2>What INFRA told Kora</h2><span class="subtle">INFRA tells Kora when something about your verification changes. Here is what it said, and what Kora did.</span></div></div>
   <% if (!(user.alerts || []).length) { %>

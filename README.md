@@ -39,6 +39,7 @@ Full steps are in [Setup](#setup) below.
 | Read a person's verified details | `server/infra/client.js` |
 | Set limits by verification level | `server/services/identity.js` |
 | Check that INFRA really signed something | `server/infra/credential.js`, `scripts/check-credential.js` |
+| Prove a fact without receiving the data (beta) | `server/routes/zk.js`, `server/infra/client.js` (`zkChallenge`, `zkProof`, `zkVerify`) |
 | React when someone is verified or withdraws access | `server/routes/webhooks.js`, `server/infra/signatures.js` |
 | Delete a person's data when INFRA tells you to | `server/routes/webhooks.js` (deletion callback) |
 | Show verified names before money moves (INFRA Connect) | `server/services/trade-identity.js`, `server/routes/market.js` |
@@ -105,6 +106,12 @@ records the merchant's consent without counting toward the plan.
   a sample identity. For the full two-person exchange, sign in as a second
   test user in another browser: one posts an offer, the other takes it, and
   both share their codes on the trade.
+- **Prove it with INFRA (beta)**: on Your details, press "Prove I'm over 18 and
+  verified". Kora asks INFRA for a one-use challenge, INFRA proves the facts
+  (zero-knowledge, about a second), and Kora checks the proof with its own
+  client credentials. Kora never sees your birthday or ID. The page then checks
+  the same proof with a different challenge to show a copied proof is refused.
+  See https://docs.infraidentity.com/proofs/.
 - **Signed by INFRA**: Your details shows whether the facts INFRA shared
   check out against INFRA's public key. Check them yourself (from this
   folder; settings come from `.env`):

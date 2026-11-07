@@ -101,6 +101,15 @@ function createInfraClient({ http = axios, log = () => {} } = {}) {
     documents: (token, userId) => call('main', 'get', api(`/users/${userId}/documents/metadata`), { headers: bearer(token) }),
     phone: (token, userId) => call('main', 'get', api(`/users/${userId}/phone`), { headers: bearer(token) }),
 
+    // ── Zero-knowledge proofs: the answer, not the data ───────────────────
+    // 1. a one-use challenge, 2. INFRA proves the facts for this challenge,
+    // 3. Kora checks the proof with its own client credentials.
+    zkChallenge: (token, userId) => call('main', 'post', api('/zk/challenges'), { data: { user_id: userId }, headers: bearer(token) }),
+    zkProof: (token, userId, challengeId, facts) =>
+      call('main', 'post', api('/zk/proofs'), { data: { user_id: userId, challenge_id: challengeId, facts }, headers: bearer(token) }),
+    zkVerify: ({ challenge, facts, now, proof, docType }) =>
+      call('main', 'post', api('/zk/verify'), { data: { challenge, facts, now, proof, doc_type: docType }, headers: mainAuth() }),
+
     // ── App-to-INFRA calls (Basic client credentials) ──────────────────────
     // billing: 'payv' records consent only (no data, nothing counted on the
     // plan); the data is then paid for through PAYV.

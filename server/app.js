@@ -95,6 +95,7 @@ function createApp({ infra } = {}) {
   app.use(require('./routes/market')({ infra }));
   app.use(require('./routes/merchant')({ infra }));
   app.use(require('./routes/account')());
+  app.use(require('./routes/zk')({ infra }));
   app.use(require('./routes/verify')());
 
   app.use((req, res) => {
