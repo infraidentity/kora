@@ -5,10 +5,12 @@
  *   2. Ask Kora (which asks INFRA) for a price for THAT wallet. If Kora needs
  *      the merchant's own wallet and this one isn't linked, INFRA says so now,
  *      before anything is signed: link it, then ask again.
- *   3. Sign an x402 "exact" payment: an EIP-3009 TransferWithAuthorization for
- *      exactly the quoted amount to the quoted address. The facilitator pays
- *      gas, so the person only signs. No library needed: eth_signTypedData_v4
- *      on the injected wallet (MetaMask, Coinbase Wallet...).
+ *   3. Sign an x402 version 2 "exact" payment: an EIP-3009
+ *      TransferWithAuthorization for exactly the quoted amount to the quoted
+ *      address. The facilitator pays gas, so the person only signs. No library
+ *      needed: eth_signTypedData_v4 on the injected wallet (MetaMask, Coinbase
+ *      Wallet...). The payment echoes INFRA's quote (`accepted`, `resource`,
+ *      `extensions`, which carries INFRA's Base builder code).
  */
 (function () {
   var root = document.getElementById('payv');
@@ -26,12 +28,14 @@
   var stepPay = document.getElementById('step-pay');
 
   var NETWORKS = {
-    'base-sepolia': { chainId: 84532, name: 'Base Sepolia', rpc: 'https://sepolia.base.org', explorer: 'https://sepolia.basescan.org', usdc: { name: 'USDC', version: '2' } },
-    base: { chainId: 8453, name: 'Base', rpc: 'https://mainnet.base.org', explorer: 'https://basescan.org', usdc: { name: 'USD Coin', version: '2' } },
+    // x402 version 2 names networks by CAIP-2 id.
+    'eip155:84532': { chainId: 84532, name: 'Base Sepolia', rpc: 'https://sepolia.base.org', explorer: 'https://sepolia.basescan.org', usdc: { name: 'USDC', version: '2' } },
+    'eip155:8453': { chainId: 8453, name: 'Base', rpc: 'https://mainnet.base.org', explorer: 'https://basescan.org', usdc: { name: 'USD Coin', version: '2' } },
   };
   var eth = window.ethereum;
   var account = null;
-  var req = null;   // INFRA's payment requirements for this wallet
+  var req = null;   // INFRA's payment requirements for this wallet (accepts[0])
+  var quote = null; // the rest of INFRA's quote: resource and extensions
   var net = null;
 
   function say(text, kind) {
@@ -89,6 +93,7 @@
       if (res.paid) { location.href = res.redirect; return; }
       if (res.ok) {
         req = res.requirements;
+        quote = { resource: res.resource, extensions: res.extensions };
         net = NETWORKS[req.network];
         if (!net) { say('INFRA asked for payment on a network Kora does not know (' + req.network + ').', 'error'); return; }
         linkStep.hidden = true;
@@ -153,7 +158,7 @@
     var authorization = {
       from: account,
       to: req.payTo,
-      value: String(req.maxAmountRequired),
+      value: String(req.amount),
       validAfter: String(now - 60),
       validBefore: String(now + Number(req.maxTimeoutSeconds || 300)),
       nonce: hex(nonce),
@@ -182,16 +187,19 @@
     };
     return eth.request({ method: 'eth_signTypedData_v4', params: [account, JSON.stringify(typedData)] })
       .then(function (signature) {
-        return btoa(JSON.stringify({ x402Version: 1, scheme: 'exact', network: req.network, payload: { signature: signature, authorization: authorization } }));
+        var payment = { x402Version: 2, accepted: req, payload: { signature: signature, authorization: authorization } };
+        if (quote.resource) payment.resource = quote.resource;
+        if (quote.extensions) payment.extensions = quote.extensions;
+        return btoa(JSON.stringify(payment));
       });
   }
 
   payBtn.addEventListener('click', function () {
     busy(payBtn, true, 'Waiting for your wallet…');
     signPayment()
-      .then(function (xPayment) {
+      .then(function (paymentSignature) {
         say('Sending your payment to INFRA…', 'info');
-        return send('POST', base, { x_payment: xPayment });
+        return send('POST', base, { payment_signature: paymentSignature });
       })
       .then(function (res) {
         if (res.ok) {

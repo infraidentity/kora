@@ -21,7 +21,8 @@ const { normaliseCode } = require('../services/trade-identity');
  *      they link it (sign a message + approve in INFRA) and Kora asks again.
  *   3. Their wallet signs a USDC transfer authorization in the browser
  *      (client/public/payv.js). The quote only accepts that wallet.
- *   4. Kora sends it with the X-PAYMENT header and gets the verification.
+ *   4. Kora sends it to INFRA in the PAYMENT-SIGNATURE header (x402
+ *      version 2) and gets the verification.
  *      INFRA takes the money only after the data is ready.
  */
 const SCOPES = ['profile:basic', 'kyc:status'];
@@ -115,6 +116,9 @@ module.exports = function merchantRoutes({ infra }) {
         return res.json({
           ok: true,
           requirements: b.accepts[0],
+          // x402 version 2: the browser echoes these in the signed payment.
+          resource: b.resource || null,
+          extensions: b.extensions || null,
           amount_display: b.amount_display,
           asset_symbol: b.asset_symbol || 'USDC',
           payer_requirement: b.payer_requirement || 'any',
@@ -151,8 +155,8 @@ module.exports = function merchantRoutes({ infra }) {
       return res.status(409).json({ ok: false, message: 'Connect your wallet to get a price first.' });
     }
 
-    const xPayment = String(req.body.x_payment || '');
-    if (!xPayment || xPayment.length > 8000) {
+    const paymentSignature = String(req.body.payment_signature || '');
+    if (!paymentSignature || paymentSignature.length > 8000) {
       return res.status(400).json({ ok: false, message: 'The wallet did not return a payment signature. Try again.' });
     }
 
@@ -161,7 +165,7 @@ module.exports = function merchantRoutes({ infra }) {
         infraUserId: check.infra_user_id,
         scopes: SCOPES,
         paymentRequestId: check.payment_request_id,
-        xPayment,
+        paymentSignature,
       });
       if (!result.ok) {
         db.failMerchantCheck(check.payment_request_id, result.code);

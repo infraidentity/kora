@@ -50,12 +50,13 @@ function fakeInfra(overrides = {}) {
     })),
     verifyClaim: track('verifyClaim', () => ok({ valid: true, claim_type: 'kyc_verified' })),
     acknowledgeDeletion: track('acknowledgeDeletion', () => ok({ acknowledged: true })),
-    payvVerification: track('payvVerification', ({ xPayment, payerAddress }) => (xPayment
+    payvVerification: track('payvVerification', ({ paymentSignature, payerAddress }) => (paymentSignature
       ? ok({ payment_request_id: 'pr_1', status: 'consumed', tx_hash: '0xtx1234567890abcdef', profile: { first_name: 'Sade', last_name: 'Ade', country: 'NG' }, kyc: { kyc_level: 'level_1', status: 'verified', verified_at: '2026-03-01T00:00:00Z' } })
       : fail(402, 'PAYMENT_REQUIRED', 'Payment is required', {
         payment_request_id: 'pr_1', amount_display: '0.95', asset_symbol: 'USDC', payer_requirement: 'any',
         ...(payerAddress ? { payer_address: payerAddress.toLowerCase() } : {}),
-        accepts: [{ scheme: 'exact', network: 'base-sepolia', maxAmountRequired: '950000', payTo: '0x000000000000000000000000000000000000dEaD', asset: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', maxTimeoutSeconds: 300 }],
+        x402Version: 2, resource: { url: 'https://api.infraidentity.com/api/v1/payv/verification' }, extensions: { 'builder-code': { info: { a: 'bc_infra' } } },
+        accepts: [{ scheme: 'exact', network: 'eip155:84532', amount: '950000', payTo: '0x000000000000000000000000000000000000dEaD', asset: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', maxTimeoutSeconds: 300 }],
       }))),
     startWalletLink: track('startWalletLink', () => ok({ challenge_id: 'ch_1', message: 'Link wallet to INFRA' })),
     signWalletLink: track('signWalletLink', () => ok({ challenge_id: 'ch_1', status: 'pending' })),

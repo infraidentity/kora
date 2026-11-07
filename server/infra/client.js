@@ -147,7 +147,7 @@ function createInfraClient({ http = axios, log = () => {} } = {}) {
       call('main', 'post', api('/deletion/acknowledge'), { data: { deletion_request_id: deletionRequestId }, headers: mainAuth() }),
 
     // ── PayV (merchant app credentials) ────────────────────────────────────
-    payvVerification({ infraUserId, scopes, paymentRequestId, payerAddress, xPayment, idempotencyKey }) {
+    payvVerification({ infraUserId, scopes, paymentRequestId, payerAddress, paymentSignature, idempotencyKey }) {
       return call('payv', 'post', api('/payv/verification'), {
         data: {
           infra_user_id: infraUserId,
@@ -157,7 +157,8 @@ function createInfraClient({ http = axios, log = () => {} } = {}) {
         },
         headers: {
           ...payvAuth(),
-          ...(xPayment ? { 'X-PAYMENT': xPayment } : {}),
+          // x402 version 2: the signed payment, base64, in PAYMENT-SIGNATURE.
+          ...(paymentSignature ? { 'PAYMENT-SIGNATURE': paymentSignature } : {}),
           ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
       });

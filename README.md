@@ -62,7 +62,7 @@ part of INFRA's API.
 | **Your details**: everything INFRA shared, and how to withdraw it | `GET /users/:id/profile`, `GET /users/:id/documents/metadata` |
 | **Verified names on every trade**: before money moves, each trader shares their own INFRA Connect code on the trade and the other side sees their verified full name (demo traders show a sample); the result's signature is checked against INFRA's public keys | `POST /connect/request`, `/.well-known/jwks.json` |
 | **INFRA proof** stamped on every trade, checkable later | `POST /claims/verify` |
-| **Merchant badge**: the merchant pays a USDC fee from their wallet for Kora to reuse their verification | `POST /payv/verification` (402 → X-PAYMENT), `/payv/wallet-links` |
+| **Merchant badge**: the merchant pays a USDC fee from their wallet for Kora to reuse their verification | `POST /payv/verification` (402 → PAYMENT-SIGNATURE, x402 v2), `/payv/wallet-links` |
 | **Live updates**: limits change the moment INFRA verifies someone; withdrawn access deletes their data and signs them out | webhooks (all 9 events), deletion callback, `POST /deletion/acknowledge` |
 | **Developer panel** at `/dev`: every call to INFRA and every webhook, with signature results | — |
 
@@ -134,7 +134,10 @@ records the merchant's consent without counting toward the plan.
   (free from faucet.circle.com), and a Connect code from that account. Until
   INFRA opens live payments, the fee is paid in test USDC: no real money.
   Kora quotes the fee (402), your wallet signs an EIP-3009 authorization
-  (`client/public/payv.js`, no gas), and Kora retries with `X-PAYMENT`.
+  (`client/public/payv.js`, no gas), and Kora retries with the payment in the
+  `PAYMENT-SIGNATURE` header (x402 version 2). The payment echoes INFRA's
+  quote, including its Base builder code, so the settled payment on Base is
+  credited to INFRA.
 - **Deletion**: remove Kora in INFRA Accounts → Connected apps. The
   `consent_revoked` webhook deletes the trader and ends their session.
 

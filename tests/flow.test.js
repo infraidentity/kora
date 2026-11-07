@@ -285,16 +285,16 @@ describe('Merchant badge with PayV', () => {
     expect((await agent.get(`/merchant/pay/${id}`)).text).toContain('Connect your wallet to see the price');
 
     const quote = await json(agent.post(`/merchant/pay/${id}/quote`)).send({ address: WALLET });
-    expect(quote.body).toMatchObject({ ok: true, amount_display: '0.95', asset_symbol: 'USDC', requirements: { network: 'base-sepolia' } });
+    expect(quote.body).toMatchObject({ ok: true, amount_display: '0.95', asset_symbol: 'USDC', requirements: { network: 'eip155:84532', amount: '950000' }, extensions: { 'builder-code': { info: { a: 'bc_infra' } } } });
     const asked = infra.calls.find((c) => c.name === 'payvVerification').args[0];
     expect(asked).toMatchObject({ infraUserId: 'sandbox-user-1', scopes: ['profile:basic', 'kyc:status'], payerAddress: WALLET });
-    expect(asked.xPayment).toBeUndefined();
+    expect(asked.paymentSignature).toBeUndefined();
     expect(db.getMerchantCheckById(id)).toMatchObject({ payment_request_id: 'pr_1', payer_address: WALLET });
 
-    const pay = await json(agent.post(`/merchant/pay/${id}`)).send({ x_payment: 'eyJ4NDAyVmVyc2lvbiI6MX0=' });
+    const pay = await json(agent.post(`/merchant/pay/${id}`)).send({ payment_signature: 'eyJ4NDAyVmVyc2lvbiI6Mn0=' });
     expect(pay.body).toEqual({ ok: true, redirect: '/merchant' });
     const paid = infra.calls.filter((c) => c.name === 'payvVerification').pop().args[0];
-    expect(paid).toMatchObject({ paymentRequestId: 'pr_1', xPayment: 'eyJ4NDAyVmVyc2lvbiI6MX0=', infraUserId: 'sandbox-user-1' });
+    expect(paid).toMatchObject({ paymentRequestId: 'pr_1', paymentSignature: 'eyJ4NDAyVmVyc2lvbiI6Mn0=', infraUserId: 'sandbox-user-1' });
     expect(db.getMerchantCheck('pr_1')).toMatchObject({ status: 'paid', tx_hash: '0xtx1234567890abcdef', first_name: 'Sade' });
 
     await agent.post('/offers').type('form').send({ side: 'sell', amount_usdc: '100', rate_usd: '1.000' });
@@ -304,7 +304,7 @@ describe('Merchant badge with PayV', () => {
   test('paying is refused until there is a quote', async () => {
     const { agent } = await signedIn();
     const id = await startCheck(agent);
-    const pay = await json(agent.post(`/merchant/pay/${id}`)).send({ x_payment: 'eA==' });
+    const pay = await json(agent.post(`/merchant/pay/${id}`)).send({ payment_signature: 'eA==' });
     expect(pay.status).toBe(409);
   });
 
@@ -320,7 +320,7 @@ describe('Merchant badge with PayV', () => {
     expect(first.body.message).toContain('Nothing has been charged');
     expect(db.getMerchantCheckById(id)).toMatchObject({ payment_request_id: 'pr_link', requirements: null });
     // No price, so nothing can be signed or sent yet.
-    expect((await json(agent.post(`/merchant/pay/${id}`)).send({ x_payment: 'eA==' })).status).toBe(409);
+    expect((await json(agent.post(`/merchant/pay/${id}`)).send({ payment_signature: 'eA==' })).status).toBe(409);
 
     const link = await json(agent.post(`/merchant/pay/${id}/wallet-link`)).send({ address: WALLET });
     expect(link.body).toEqual({ ok: true, challenge_id: 'ch_1', message: 'Link wallet to INFRA' });
@@ -338,7 +338,7 @@ describe('Merchant badge with PayV', () => {
     const id = await startCheck(agent);
     await json(agent.post(`/merchant/pay/${id}/quote`)).send({ address: WALLET });
     infra.payvVerification = async () => fail(402, 'PAYER_MISMATCH', 'different wallet');
-    const pay = await json(agent.post(`/merchant/pay/${id}`)).send({ x_payment: 'eA==' });
+    const pay = await json(agent.post(`/merchant/pay/${id}`)).send({ payment_signature: 'eA==' });
     expect(pay.status).toBe(402);
     expect(pay.body.message).toContain('Nothing was charged');
     expect(db.getMerchantCheckById(id).status).toBe('quoted');
@@ -359,7 +359,7 @@ describe('Merchant badge with PayV', () => {
     const other = await signInAs('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
     expect((await other.get(`/merchant/pay/${id}`)).status).toBe(404);
     expect((await json(other.post(`/merchant/pay/${id}/quote`)).send({ address: WALLET })).status).toBe(404);
-    expect((await json(other.post(`/merchant/pay/${id}`)).send({ x_payment: 'eA==' })).status).toBe(404);
+    expect((await json(other.post(`/merchant/pay/${id}`)).send({ payment_signature: 'eA==' })).status).toBe(404);
   });
 });
 

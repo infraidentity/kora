@@ -14,7 +14,7 @@ describe('INFRA client', () => {
     expect(sent.url).toBe('https://api.infra.test/api/v1/payv/verification');
     expect(sent.headers.Authorization).toBe('Basic ' + Buffer.from('kora-merchant:payv-secret').toString('base64'));
     expect(sent.headers['Idempotency-Key']).toBe('k1');
-    expect(sent.headers['X-PAYMENT']).toBeUndefined();
+    expect(sent.headers['PAYMENT-SIGNATURE']).toBeUndefined();
     expect(log).toHaveBeenCalledWith(expect.objectContaining({ app: 'payv', method: 'POST', path: '/api/v1/payv/verification', status: 402, code: 'PAYMENT_REQUIRED' }));
   });
 
